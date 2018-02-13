@@ -30,7 +30,7 @@ Some important library to take note:
 
 1) "pip install matplotlib"
     This library had some issues with the latest version with stretch. I suggest you roll back to version 2.10.0
-    In the terminal: "pip install matplotlib == 2.10.0"
+    In the terminal: "pip install matplotlib == 2.1.0"
 
 
 
