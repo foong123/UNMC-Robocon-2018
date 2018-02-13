@@ -7,12 +7,12 @@ ser = serial.Serial('/dev/ttyACM1', 9600)
 
 time.sleep(2)
 while True:
-       ser.write("nig")
+       ser.write("hello")
        time.sleep(0.1)
-       ser.write("nigg")
+       ser.write("123")
        time.sleep(0.1)
-       ser.write("nigga")
+       ser.write("world")
        time.sleep(0.1)
-       ser.write("niggas")
+       ser.write("123456789")
        time.sleep(0.1)
        
