@@ -1,0 +1,29 @@
+Hello all. In this text I will show you how to pull and push. 
+
+Pulling
+
+1) Get a GitHub account and follow the user foong123
+2) Inform me once follow via Whatapps or email and I will add you as contributors.
+3) Open cmd and type "cd Desktop"
+4) Then type "mkdir <your folder name>".   In my case I type "mkdir Robocon".
+5) Key in "cd <your folder name>"
+6) type "git init"
+7) type "git remote add origin https://github.com/foong123/UNMC-Robocon-2018.git"
+8) key "git pull origin <your branch that you will be working>"
+   E.g. if you are working on Launching key in "git pull origin Launching"
+   This will pull the launching branch into that folder
+9) To change branch key in "git checkout <branch available on the repo>"
+10) To know which branch you are using type "git status"
+
+
+Pushing
+
+When you have done your task in Robocon and you need to push them on GitHub,
+
+1) Open cmd and type "cd Desktop" and then "cd <your folder name>"
+2) Before you push check your branch that you are on ( use git status to check)
+3) Once checked, key "git add ."
+4) Then "git commit -m "<your Message>" " Be sure that your message contains "" and 
+   says what you added/updated for your pushing. 
+5) type "git push origin <current branch you working>"
+6) Go to GitHub and check your branch and you will see it is updated.
