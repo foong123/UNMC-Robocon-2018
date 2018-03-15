@@ -13,8 +13,7 @@ pinMode(motorA1,OUTPUT); //set motor pin as output
 pinMode(motorA2,OUTPUT);
 while(1){
   if(Serial.available()){
-    int duty_cycle = Serial.read()-'0';
-    directionA(duty_cycle);
+    directionA(180);
     break;
     }
   
@@ -27,10 +26,7 @@ while(1){
 void loop() {
   if(Serial.available()){
     sig =  Serial.read() - '0';
-    if(sig == 0){
-      myservo.write(70);
-  
-  }else if(sig == 1){
+    if(sig == 1){
     myservo.write(100);
     Serial.println("Released");
     motorstop();
