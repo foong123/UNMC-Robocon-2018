@@ -33,7 +33,10 @@ def release()
 		pi.set_servo_pulsewidth(servo_pin, 1000) # safe anti-clockwise
 		print("Released")
 
-
+def motorstop()
+	set_PWM_dutycycle(pwmA,0)
+	set_PWM_dutycycle(pwmB,0)
+	
 	
 	
 print("Using settings file " + SETTINGS_FILE + ".ini")
@@ -79,6 +82,7 @@ while True:
     print("r: %d p: %d y: %d" % (roll,pitch,yaw))
 	if pitch <= release_angle + error and pitch >= release_angle - error:
 		release()
+		motorstop()
 		print(pitch)
 		while(1):
 			pass
