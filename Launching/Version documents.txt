@@ -1,0 +1,16 @@
+Sematic Versioning Document
+Patch releases: 1.0 or 1.0.x or ~1.0.4
+Minor releases: 1 or 1.x or ^1.0.4
+Major releases: * or x
+
+Version 1 
+Arduino -> Servo and motor
+Raspberry Pi -> mpu9150
+Comm system  	Arduino <->Raspi Serial
+				MPU9150 --> Raspi I2C
+
+Version 2
+Raspi -> mpu9150 , Servo and motor
+Comm system		MPU9150 -> Raspi I2C
+
+		
