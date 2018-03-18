@@ -3,7 +3,7 @@
 uchar t; 
 float sumvalueweight;
 float sumvalue;
-word d;
+float d;
 uchar Weight[9];
 
 //void send_data(short a1,short b1,short c1,short d1,short e1,short f1); 
@@ -48,7 +48,7 @@ void loop()
   sumvalue= ((data[0]*1)+(data[2]*1.02)+(data[4]*1.11)+(data[6]*0.99)+(data[8]*0.81)+(data[10]*0.88)+(data[12]*0.82)+(data[14]*0.89));
   d = (sumvalueweight)/(sumvalue);
   Serial.println(d);
-  if (sumvalue >= 560){
+  if (sumvalue >= 560.0){
     Serial.println("Turn 90");
   }
    delay(500);
