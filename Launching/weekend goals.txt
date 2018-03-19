@@ -1,0 +1,7 @@
+Fix camera position
+Calibrate locomotion with tile
+Make electronic housing
+Fix side IR if needed
+Get manual bot ready
+Get raspi general code framework ready
+investigate magnetic inteference
