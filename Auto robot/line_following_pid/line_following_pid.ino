@@ -12,9 +12,9 @@ float d;
 float offset[8] = {1, 1.02, 1.11, 0.99, 0.81, 0.88, 0.82, 0.89};
 
 //for pid
-float Kp = 10.0;
+float Kp = 1.0;
 float Ki = 0.025;
-float Kd = 25;
+float Kd = 0;
 float output;
 float error, errorSum, errorOld;
 
@@ -28,8 +28,8 @@ float rightMotorSpeed = 0;
 
 //pin for motor
 int enL = 5;
-int dirL = 6;
-int enR = 7;
+int dirL = 7;
+int enR = 6;
 int dirR = 8;
 
 void setup() {
@@ -48,15 +48,18 @@ void setup() {
 
 void loop() {
   WA = weightedAverage();
-  output = pid(WA);
-  motor_speed(output);
+  //output = pid(WA);
+  motor_speed(WA);
+  //motorLeft(100,0);
+  //motorRight(100, 0);
+  //turn90();
 }
 
 float weightedAverage() {
   Serial.println("bbbbb");
   Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
   while (Wire.available())
-  {
+  {Serial.println("aaa");
     data[t] = Wire.read();
     if (t < 15) {
       t++;
@@ -65,6 +68,7 @@ float weightedAverage() {
       t = 0;
     }
   }
+  
   Serial.print("data[1]:");
   Serial.println(data[0] * offset[0]);
   Serial.print("data[2]:");
@@ -81,16 +85,15 @@ float weightedAverage() {
   Serial.println(data[12] * offset[6]);
   Serial.print("data[8]:");
   Serial.println(data[14] * offset[7]);
-
+  delay(500);
   sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
   sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
   d = (sumvalueweight) / (sumvalue);
   Serial.println(d);
+  Serial.print("sumvalue ==   ");
+  Serial.println(sumvalue);
+Serial.println(d);
   return d;
-
-  if (sumvalue >= 560.0) {
-    turn90();
-  }
 }
 
 float pid(long lineDist)
@@ -203,6 +206,5 @@ void check90() {
   }
   motorStop();
 }
-
 
 
