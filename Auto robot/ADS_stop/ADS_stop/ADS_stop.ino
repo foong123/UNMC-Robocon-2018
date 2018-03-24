@@ -31,12 +31,23 @@ float rightMotorSpeed = 0;
 int led1 = 9;
 int magic_number  = 40;
 int cross_value = 500;
+
 //pin for motor
 int en2 = 5;
 int dir2 = 7;
 int en1 = 6;
 int dir1 = 8;
 
+//ADS pin
+int ADS0 = A0;
+int ADS1 = A1;
+int ADS2 = A2;
+double input0;
+double input1;
+double input2;
+int k = 200*26;
+int distance = 10;
+int distance_error = 1;
 void setup() {
   Wire.begin();
   Serial.begin(115200);
@@ -96,6 +107,22 @@ void line_follow(){
   motorRight(speedr, 0);
   
   }
+
+  void check_manual(){
+    input0 = k/analogRead(ADS0);
+    input1 = k/analogRead(ADS1);
+    input2 = k/analogRead(ADS2);
+    if(input0 >= distance - distance_error && input0 <= distance + distance_error ){
+       //slowdown
+       if(int (input0) >= int(input1) - 1 && int(input0) <=int(input1) + 1){
+        if(int (input1) >= int(input2) - 1 && int(input1) <=int(input2) + 1 ){
+           if(int (input2) >= int(input0) - 1 && int(input2) <=int(input0) + 1 ){
+            motorstop();
+            }
+          }
+        }
+      }
+    }
 float weightedAverage() {
   //Serial.println("bbbbb");
  read_sunfounder();
@@ -128,23 +155,7 @@ float weightedAverage() {
   return d ;
 }
 
-long pid(float lineDist)
-{
-  errorOld = error;        // Save the old error for differential component
-  error = lineDist;  // Calculate the error in position
-  errorSum += error;
-  //Serial.println(error);
-  //delay(500);
-  float proportional = error * Kp;  // Calculate the components of the PID
-/*
-  float integral = errorSum * Ki;
 
-  float differential = (error - errorOld) * Kd;
-
-  long output = proportional + integral + differential;  // Calculate the result
-*/
-  return output;
-}
 
 
 
