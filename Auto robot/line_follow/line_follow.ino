@@ -8,8 +8,8 @@ float sumvalueweight;
 float sumvalue;
 float WA;
 float d;
-//float leftmost;
-//float rightmost;
+float leftmost;
+float rightmost;
 float offset[8] = {1, 0.987, 0.97, 0.813, 0.734, 0.821, 0.78, 0.867};
 
 //for pid
@@ -30,7 +30,7 @@ float rightMotorSpeed = 0;
 //debug
 int led1 = 9;
 int magic_number  = 40;
-
+int cross_value = 500;
 //pin for motor
 int en2 = 5;
 int dir2 = 7;
@@ -53,40 +53,52 @@ void setup() {
 }
 
 void loop() {
-  /*
-  if (Serial.read() == 'c'){
-    motorStop();
-  }*/
-  WA = weightedAverage();
-  output = pid(WA);
-  motor_speed(output);
-  Wire.requestFrom(9, 16);
-  if(Wire.available()){
-    digitalWrite(led1,HIGH);
-    
-    }else{
-          digitalWrite(led1,LOW);
-
-      }
-  //motorLeft(100,0);
-  //motorRight(100, 0);
-  //turn90();
+  
+  read_sunfounder();
+  line_follow();
+  
+  if(sumvalue >= cross_value){
+  turncross();
+  }
 }
-
+void line_follow(){
+   if(WA >= 0.5){
+    speedl = normal_speed;
+    speedr = normal_speed - 20;
+    if(WA >= 2.8){
+      speedl += 35;
+      if(WA >= 3.5){
+        speedl += 20;
+        if(data[14]*offset[7] >= 70){
+          speedl += 30;
+          speedr = 50;
+        }
+      }
+    }
+  }else if(WA <= -0.5){
+    speedl = normal_speed - 20;
+    speedr = normal_speed;
+    if(WA <= -2.8){
+      speedr += 35;
+      if(WA <= -3.5){
+        speedr += 20;
+        if(data[0]*offset[0] >= 70){
+          speedr += 30;
+          speedl = 50;
+        }
+      }
+    }
+  }else{
+    speedr = normal_speed;
+    speedl = normal_speed;
+  }
+  motorLeft(speedl, 0);
+  motorRight(speedr, 0);
+  
+  }
 float weightedAverage() {
   //Serial.println("bbbbb");
-  Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
-  while (Wire.available())
-  { //Serial.println("aaa");
-    
-    data[t] = Wire.read();
-    if (t < 15) {
-      t++;
-    }
-    else {
-      t = 0;
-    }
-  }
+ read_sunfounder();
  /* 
   Serial.print("data[1]:");
   Serial.println(data[0] * offset[0]);
@@ -184,12 +196,12 @@ void motorRight(float speed_pwm, int dir) {
   analogWrite(en1, speed_pwm);
 }
 
-void turn90() {
+void turncross() {
   digitalWrite(dir2, LOW);
   analogWrite(en2, 100);
   digitalWrite(dir1, HIGH);
   analogWrite(en1, 100);
-  check90();
+  checkcross();
 }
 
 void motorStop() {
@@ -199,7 +211,7 @@ void motorStop() {
   analogWrite(en1, 0);
 }
 
-/*void check90() {
+void checkcross() {
   read_sunfounder();
   while (1) {
     read_sunfounder();
@@ -215,38 +227,8 @@ void motorStop() {
   }
   motorStop();
 }
-*/
-void check90() { //  check only once
-  Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
-  while (Wire.available())
-  {
-    data[t] = Wire.read();
-    if (t < 15) {
-      t++;
-    }
-    else {
-      t = 0;
-    }
-  }
-  float rightMost = (data[14] * offset[7]);
-  float leftMost = (data[0] * offset[1]);
-  while (1) {
-    
-  
- 
-    if (rightMost < 70 && leftMost < 70) {
-      break;
-    }
-  }
-  while (1) {
-    
-  
-    if (rightMost >= 70 && leftMost >= 70) {
-      break;
-    }
-  }
-  motorStop();
-}
+
+
 
 void read_sunfounder(){
   Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
@@ -260,8 +242,8 @@ void read_sunfounder(){
       t = 0;
     }
   }
-float   rightMost = (data[14] * offset[7]);
-float leftMost = (data[0] * offset[1]);
+rightMost = (data[14] * offset[7]);
+leftMost = (data[0] * offset[1]);
   
   }
 
