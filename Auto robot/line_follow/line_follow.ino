@@ -20,23 +20,31 @@ long output;
 float error, errorSum, errorOld;
 
 //for motor movement
-int leftMotorBaseSpeed = 50;
-int rightMotorBaseSpeed = 55;
+int leftMotorBaseSpeed = 70;
+int rightMotorBaseSpeed = 70;
 int min_speed = -85;
 int max_speed = 85;
 float leftMotorSpeed = 0;  // Initialise Speed variables
 float rightMotorSpeed = 0;
+float leftMost;
+float rightMost;
+int encoder1 = 2;
+int steps_90 = 365;
 
 //debug
 int led1 = 9;
 int magic_number  = 40;
-int cross_value = 500;
+int cross_value = 600;
+int ignore_flag = 0;
 //pin for motor
 int en2 = 5;
 int dir2 = 7;
 int en1 = 6;
 int dir1 = 8;
-
+int speedl = 0;
+int speedr = 0;
+int normal_speed = 50;
+volatile int steps = 0;
 void setup() {
   Wire.begin();
   Serial.begin(115200);
@@ -45,46 +53,87 @@ void setup() {
   errorSum = 0;
   errorOld = 0;
 
+  pinMode(encoder1,INPUT_PULLUP);
   pinMode(en2, OUTPUT);
   pinMode(en1, OUTPUT);
   pinMode(dir2, OUTPUT);
   pinMode(dir1, OUTPUT);
   pinMode(led1,OUTPUT);
+
 }
 
 void loop() {
   
-  read_sunfounder();
+  Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
+  if(Wire.available()){
+    digitalWrite(led1,HIGH);
+    }else{
+      digitalWrite(led1,LOW);
+      }
+  WA = weightedAverage();
+  //read_sunfounder();
   line_follow();
   
   if(sumvalue >= cross_value){
-  turncross();
+    attachInterrupt(digitalPinToInterrupt(encoder1),cal,CHANGE);
+    turncross();
+    go_straight();
+    ignorecross();
+    Serial.println("After ignore");
   }
+ 
+  if(ignore_flag == 1){
+     go_straight();
+    while(1){
+      Serial.println("After flag");
+      read_sunfounder();
+      line_follow();
+      if(sumvalue >= cross_value){
+         Serial.println("3rd cross");
+        motorStop();
+        while(1);
+        }
+      }
+   }
 }
+void go_straight(){
+  steps = 0;
+  while(1){
+   read_sunfounder();
+   line_follow();
+   Serial.println("go straight");
+    if(steps >= 300){
+      Serial.println("Start check 2nd cross");
+      break;
+      }
+    
+    }
+  
+  }
 void line_follow(){
    if(WA >= 0.5){
     speedl = normal_speed;
-    speedr = normal_speed - 20;
+    speedr = normal_speed - 10;
     if(WA >= 2.8){
-      speedl += 35;
+      speedl += 17.5;
       if(WA >= 3.5){
-        speedl += 20;
+        speedl += 10;
         if(data[14]*offset[7] >= 70){
-          speedl += 30;
-          speedr = 50;
+          speedl += 15;
+          speedr = 25;
         }
       }
     }
   }else if(WA <= -0.5){
-    speedl = normal_speed - 20;
+    speedl = normal_speed - 10;
     speedr = normal_speed;
     if(WA <= -2.8){
-      speedr += 35;
+      speedr += 17.5;
       if(WA <= -3.5){
         speedr += 20;
         if(data[0]*offset[0] >= 70){
-          speedr += 30;
-          speedl = 50;
+          speedr += 15;
+          speedl = 25;
         }
       }
     }
@@ -121,10 +170,12 @@ float weightedAverage() {
   sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
   sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
   d = (sumvalueweight) / (sumvalue);
- 
- // Serial.print("sumvalue ==   ");
-  //Serial.println(sumvalue);
+  rightMost = (data[14] * offset[7]);
+leftMost = (data[0] * offset[1]);
   
+ // Serial.print("sumvalue ==   ");
+ //Serial.println(sumvalue);
+ // delay(500);
   return d ;
 }
 
@@ -145,7 +196,17 @@ long pid(float lineDist)
 */
   return output;
 }
-
+void ignorecross(){
+  while(1){
+    Serial.println("In ignore");
+  line_follow();
+  read_sunfounder();
+  if(sumvalue >= cross_value){
+    ignore_flag = 1;
+    break;
+    }
+  }
+  }
 
 
 void motorLeft(float speed_pwm, int dir) {
@@ -160,34 +221,32 @@ void motorRight(float speed_pwm, int dir) {
 
 void turncross() {
   digitalWrite(dir2, LOW);
-  analogWrite(en2, 100);
+  analogWrite(en2, 75);
   digitalWrite(dir1, HIGH);
-  analogWrite(en1, 100);
+  analogWrite(en1, 75);
   checkcross();
 }
 
 void motorStop() {
-  digitalWrite(dir2, HIGH);
+ 
+   digitalWrite(dir2, HIGH);
   analogWrite(en2, 0);
   digitalWrite(dir1, HIGH);
   analogWrite(en1, 0);
+  //delay(25);
+  
 }
 
 void checkcross() {
-  read_sunfounder();
+ 
   while (1) {
-    read_sunfounder();
-    if (rightMost < 70 && leftMost < 70) {
+     
+    if (steps >= steps_90) {
+      motorStop();
       break;
+      
     }
   }
-  while (1) {
-    read_sunfounder();
-    if (rightMost >= 70 && leftMost >= 70) {
-      break;
-    }
-  }
-  motorStop();
 }
 
 
@@ -195,7 +254,7 @@ void checkcross() {
 void read_sunfounder(){
   Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
   while (Wire.available())
-  {
+  { digitalWrite(led1,HIGH);
     data[t] = Wire.read();
     if (t < 15) {
       t++;
@@ -203,9 +262,19 @@ void read_sunfounder(){
     else {
       t = 0;
     }
-  }
-rightMost = (data[14] * offset[7]);
+    sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
+  sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
+  WA = (sumvalueweight) / (sumvalue);
+  rightMost = (data[14] * offset[7]);
 leftMost = (data[0] * offset[1]);
+  }
   
+
   }
 
+  
+void cal(){
+  steps++;
+  
+  
+  }

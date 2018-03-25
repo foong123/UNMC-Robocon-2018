@@ -113,7 +113,8 @@ void line_follow(){
     input1 = k/analogRead(ADS1);
     input2 = k/analogRead(ADS2);
     if(input0 >= distance - distance_error && input0 <= distance + distance_error ){
-       //slowdown
+        speedr /= 2;
+        speedl /= 2;
        if(int (input0) >= int(input1) - 1 && int(input0) <=int(input1) + 1){
         if(int (input1) >= int(input2) - 1 && int(input1) <=int(input2) + 1 ){
            if(int (input2) >= int(input0) - 1 && int(input2) <=int(input0) + 1 ){
