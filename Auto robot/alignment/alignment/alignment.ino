@@ -77,41 +77,37 @@ void loop() {
   WA = weightedAverage();
   //read_sunfounder();
   line_follow();
-  check_stopzone();
- 
- 
-  
+  check_stopzone();  
 }
+
 void check_stopzone(){
   read_IR();
   Serial.println(left_IR);
   Serial.println(right_IR);
   if(left_IR <= 100 ){
-    Serial.println("left detect");
-     analogWrite(en2, 0);
-     digitalWrite(dir1,LOW);
-     analogWrite(en1, 50);
+      Serial.println("left detect");
+      analogWrite(en2, 0);
+      digitalWrite(dir1,LOW);
+      analogWrite(en1, 50);
      while(1){
       if(right_IR <= 100){
-         Serial.println("right detect");
-        analogWrite(en2, 0);
-        while(1);
+          Serial.println("right detect");
+          analogWrite(en1, 0);
+          while(1);
         }
-      
       }
     }
     if(right_IR <= 100){
       Serial.println("right detect");
       analogWrite(en1, 0);
-     digitalWrite(dir2,LOW);
-     analogWrite(en2, 50);
+      digitalWrite(dir2,LOW);
+      analogWrite(en2, 50);
      while(1){
       if(left_IR <= 100){
-         Serial.println("left detect");
-        analogWrite(en1, 0);
+          Serial.println("left detect");
+          analogWrite(en1, 0);
         while(1);
         }
-      
       }
       }
   }
@@ -119,8 +115,8 @@ void check_stopzone(){
 void read_IR(){
   left_IR = analogRead(IR_left);
   right_IR = analogRead(IR_right);
-
   }
+  
 void go_straight(){
   steps = 0;
   while(1){
@@ -130,11 +126,10 @@ void go_straight(){
     if(steps >= 300){
       Serial.println("Start check 2nd cross");
       break;
-      }
-    
+      }  
     }
-  
-  }
+}
+
 void line_follow(){
   read_sunfounder();
    if(WA >= 0.5){
@@ -168,9 +163,9 @@ void line_follow(){
     speedl = normal_speed;
   }
   motorLeft(speedl, 0);
-  motorRight(speedr, 0);
-  
-  }
+  motorRight(speedr, 0);  
+}
+
 float weightedAverage() {
   //Serial.println("bbbbb");
  read_sunfounder();
@@ -222,6 +217,7 @@ long pid(float lineDist)
 */
   return output;
 }
+
 void ignorecross(){
   while(1){
     Serial.println("In ignore");
@@ -232,8 +228,7 @@ void ignorecross(){
     break;
     }
   }
-  }
-
+}
 
 void motorLeft(float speed_pwm, int dir) {
   digitalWrite(dir2, dir);
@@ -254,28 +249,21 @@ void turncross() {
 }
 
 void motorStop() {
- 
-   digitalWrite(dir2, HIGH);
-  analogWrite(en2, 0);
-  digitalWrite(dir1, HIGH);
-  analogWrite(en1, 0);
-  //delay(25);
-  
+    digitalWrite(dir2, HIGH);
+    analogWrite(en2, 0);
+    digitalWrite(dir1, HIGH);
+    analogWrite(en1, 0);
+  //delay(25);  
 }
 
 void checkcross() {
- 
   while (1) {
-     
     if (steps >= steps_90) {
       motorStop();
       break;
-      
     }
   }
 }
-
-
 
 void read_sunfounder(){
   Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
@@ -293,14 +281,9 @@ void read_sunfounder(){
   WA = (sumvalueweight) / (sumvalue);
   rightMost = (data[14] * offset[7]);
 leftMost = (data[0] * offset[1]);
-  }
-  
+  } 
+}
 
-  }
-
-  
 void cal(){
-  steps++;
-  
-  
-  }
+  steps++;  
+}
