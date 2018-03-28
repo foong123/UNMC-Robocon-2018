@@ -56,11 +56,13 @@ volatile int steps = 0;
 
 //for ADS
 int k = 200 * 26;
-int ADS0 = A0;
+int ADS0 = A3;
 int ADS1 = A1;
+//int ADS1 = 48;
+//int ADS0 = 49;
 double input0;
 double input1;
-float distance = 12.0;
+float distance = 30.0;
 
 void setup() {
   Wire.begin();
@@ -394,18 +396,30 @@ void cal() {
 
 void checkADS() {
   while (1) {
-    line_follow(forward);
+    line_follow(reverse);
     input0 = k / analogRead(ADS0);
-    input1 = k / analogRead(ADS1);
+    delay(500);
+    //input1 = k / analogRead(ADS1);
+    //input0 = digitalRead(ADS0);
+    //input1 = digitalRead(ADS1);
+    Serial.println(input0);
+    Serial.print("  ");
+    //Serial.println(input1);
+    /*
     if (input0 <= distance) {
+      Serial.println("first");
       motorLeft(35, forward);
       motorRight(35, forward);
       while (1) {
         if (input1 <= distance) {
           motorStop();
+          Serial.println("Second");
+          while(1);
         }
       }
+      
     }
+    */
   }
 }
 

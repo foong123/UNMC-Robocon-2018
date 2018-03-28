@@ -63,6 +63,7 @@ void setup() {
   errorOld = 0;
 
   pinMode(encoder1, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(encoder1),cal,CHANGE);
   pinMode(en2, OUTPUT);
   pinMode(en1, OUTPUT);
   pinMode(dir2, OUTPUT);
@@ -83,7 +84,7 @@ void loop() {
   check_launchzone();
   go_reverse();
   check_reloadzone();
-  go_staright();
+  go_straight();
 }
 void check_reloadzone() {
   while (1) {
@@ -91,15 +92,16 @@ void check_reloadzone() {
     read_IR();
     Serial.println(left_IR);
     Serial.println(right_IR);
-    if (left_IR <= 100 ) {
+    if (right_IR == HIGH ) {
       Serial.println("left detect");
       analogWrite(en2, 0);
       digitalWrite(dir1, HIGH);
       analogWrite(en1, 50);
       while (1) {
-        if (right_IR <= 100) {
+        read_IR();
+        if (left_IR == HIGH) {
           Serial.println("right detect");
-          analogWrite(en2, 0);
+          analogWrite(en1, 0);
           reload_flag = 1;
           delay(5000);
           break;
@@ -108,15 +110,17 @@ void check_reloadzone() {
       }
       break;
     }
-    if (right_IR <= 100) {
+    if (left_IR == HIGH) {
       Serial.println("right detect");
       analogWrite(en1, 0);
       digitalWrite(dir2, HIGH);
       analogWrite(en2, 50);
       while (1) {
-        if (left_IR <= 100) {
+        read_IR();
+        if (right_IR == HIGH) {
+          
           Serial.println("left detect");
-          analogWrite(en1, 0);
+          analogWrite(en2, 0);
           reload_flag = 1;
           delay(5000);
           break;
@@ -174,7 +178,7 @@ void check_launchzone() {
       analogWrite(en1, 50);
       while (1) {
         read_IR();
-        if (left_IR <= 100) {
+        if (left_IR == HIGH) {
 
           Serial.println("left detect");
           analogWrite(en1, 0);
@@ -210,12 +214,12 @@ void go_straight() {
 }
 void line_follow(int dir) {
   read_sunfounder();
-  if (WA >= 0.5) {
+  if (WA >= 1.4) {
     speedl = normal_speed;
     speedr = normal_speed - 10;
-    if (WA >= 2.8) {
+    if (WA >= 3.66) {
       speedl += 17.5;
-      if (WA >= 3.5) {
+      if (WA >= 9.63) {
         speedl += 10;
         if (data[14]*offset[7] >= 70) {
           speedl += 15;
@@ -223,12 +227,12 @@ void line_follow(int dir) {
         }
       }
     }
-  } else if (WA <= -0.5) {
+  } else if (WA <= 0.6) {
     speedl = normal_speed - 10;
     speedr = normal_speed;
-    if (WA <= -2.8) {
+    if (WA <= -4.4) {
       speedr += 17.5;
-      if (WA <= -3.5) {
+      if (WA <= -8) {
         speedr += 20;
         if (data[0]*offset[0] >= 70) {
           speedr += 15;
@@ -237,12 +241,11 @@ void line_follow(int dir) {
       }
     }
   } else {
-    speedr = normal_speed;
-    speedl = normal_speed;
+    speedr = normal_speed*2;
+    speedl = normal_speed *2;
   }
   motorLeft(speedl, dir);
   motorRight(speedr, dir);
-
 
 }
 float weightedAverage() {
@@ -299,7 +302,7 @@ long pid(float lineDist)
 void ignorecross() {
   while (1) {
     Serial.println("In ignore");
-    line_follow();
+    line_follow(forward);
     read_sunfounder();
     if (sumvalue >= cross_value) {
       ignore_flag = 1;
