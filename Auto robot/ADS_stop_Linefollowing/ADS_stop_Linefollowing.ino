@@ -78,6 +78,8 @@ void setup() {
   pinMode(led1, OUTPUT);
   pinMode(IR_left, INPUT);
   pinMode(IR_right, INPUT);
+  pinMode(ADS0, INPUT);
+  pinMode(ADS1, INPUT);
 }
 
 void loop() {
@@ -309,7 +311,7 @@ long pid(float lineDist)
 void ignorecross() {
   while (1) {
     Serial.println("In ignore");
-    line_follow();
+    line_follow(forward);
     read_sunfounder();
     if (sumvalue >= cross_value) {
       ignore_flag = 1;
@@ -396,8 +398,8 @@ void checkADS() {
     input0 = k / analogRead(ADS0);
     input1 = k / analogRead(ADS1);
     if (input0 <= distance) {
-      motorLeft(1, 35);
-      motorRight(1, 35);
+      motorLeft(35, forward);
+      motorRight(35, forward);
       while (1) {
         if (input1 <= distance) {
           motorStop();
