@@ -6,7 +6,7 @@ uchar t;
 uchar data[16];
 float sumvalueweight;
 float sumvalue;
-float WA;
+float WA = 0;
 float d;
 float leftmost;
 float rightmost;
@@ -70,10 +70,11 @@ void loop() {
     }else{
       digitalWrite(led1,LOW);
       }
-  WA = weightedAverage();
-  //read_sunfounder();
+   Serial.println(WA);
+  //WA = weightedAverage();
+ // read_sunfounder();
   line_follow();
-  
+  /*
   if(sumvalue >= cross_value){
     attachInterrupt(digitalPinToInterrupt(encoder1),cal,CHANGE);
     turncross();
@@ -94,12 +95,11 @@ void loop() {
         while(1);
         }
       }
-   }
+   }*/
 }
 void go_straight(){
   steps = 0;
   while(1){
-   read_sunfounder();
    line_follow();
    Serial.println("go straight");
     if(steps >= 300){
@@ -111,6 +111,7 @@ void go_straight(){
   
   }
 void line_follow(){
+  read_sunfounder();
    if(WA >= 0.5){
     speedl = normal_speed;
     speedr = normal_speed - 10;
@@ -148,7 +149,7 @@ void line_follow(){
 float weightedAverage() {
   //Serial.println("bbbbb");
  read_sunfounder();
- /* 
+ /*
   Serial.print("data[1]:");
   Serial.println(data[0] * offset[0]);
   Serial.print("data[2]:");
@@ -165,7 +166,7 @@ float weightedAverage() {
   Serial.println(data[12] * offset[6]);
   Serial.print("data[8]:");
   Serial.println(data[14] * offset[7]);
-  //delay(500);
+  delay(500);
   */
   sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
   sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
@@ -262,11 +263,35 @@ void read_sunfounder(){
     else {
       t = 0;
     }
+    /*
+     Serial.print("data[1]:");
+  Serial.println(data[0] * offset[0]);
+  Serial.print("data[2]:");
+  Serial.println(data[2] * offset[1]);
+  Serial.print("data[3]:");
+  Serial.println(data[4] * offset[2]);
+  Serial.print("data[4]:");
+  Serial.println(data[6] * offset[3]);
+  Serial.print("data[5]:");
+  Serial.println(data[8] * offset[4]);
+  Serial.print("data[6]:");
+  Serial.println(data[10] * offset[5]);
+  Serial.print("data[7]:");
+  Serial.println(data[12] * offset[6]);
+  Serial.print("data[8]:");
+  Serial.println(data[14] * offset[7]);
+  //delay(500);
+    //Serial.println("fuck");
+   
+  //delay(500);
+  */
     sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
   sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
   WA = (sumvalueweight) / (sumvalue);
   rightMost = (data[14] * offset[7]);
 leftMost = (data[0] * offset[1]);
+Serial.println(WA);
+
   }
   
 

@@ -47,8 +47,8 @@ int speedl = 0;
 int speedr = 0;
 int normal_speed = 50;
 volatile int steps = 0;
-int IR_left = A4;
-int IR_right = A5;
+int IR_left = 10;
+int IR_right = 11;
 void setup() {
   Wire.begin();
   Serial.begin(115200);
@@ -76,6 +76,7 @@ void loop() {
       }
   WA = weightedAverage();
   //read_sunfounder();
+  read_IR();
   line_follow();
   check_stopzone();
  
@@ -84,30 +85,30 @@ void loop() {
 }
 void check_stopzone(){
   read_IR();
-  Serial.println(left_IR);
-  Serial.println(right_IR);
-  if(left_IR <= 100 ){
-    Serial.println("left detect");
-     analogWrite(en2, 0);
-     digitalWrite(dir1,LOW);
-     analogWrite(en1, 50);
+  if(left_IR == HIGH ){
+    Serial.println("left detect1");
+     analogWrite(en1, 0);
+     digitalWrite(dir2,LOW);
+     analogWrite(en2, 50);
      while(1){
-      if(right_IR <= 100){
-         Serial.println("right detect");
+      read_IR();
+      if(right_IR == HIGH){
+         Serial.println("right detect1");
         analogWrite(en2, 0);
         while(1);
         }
       
       }
     }
-    if(right_IR <= 100){
-      Serial.println("right detect");
-      analogWrite(en1, 0);
-     digitalWrite(dir2,LOW);
-     analogWrite(en2, 50);
+    if(right_IR == HIGH){
+      Serial.println("right detect2");
+      analogWrite(en2, 0);
+     digitalWrite(dir1,LOW);
+     analogWrite(en1, 50);
      while(1){
-      if(left_IR <= 100){
-         Serial.println("left detect");
+      read_IR();
+      if(left_IR == HIGH){
+         Serial.println("left detect2");
         analogWrite(en1, 0);
         while(1);
         }
@@ -117,9 +118,13 @@ void check_stopzone(){
   }
 
 void read_IR(){
-  left_IR = analogRead(IR_left);
-  right_IR = analogRead(IR_right);
-
+  
+  left_IR = digitalRead(IR_left);
+  right_IR = digitalRead(IR_right);
+  Serial.print("left value = ");
+  Serial.println(left_IR);
+  Serial.print("right value = ");
+  Serial.println(right_IR);
   }
 void go_straight(){
   steps = 0;

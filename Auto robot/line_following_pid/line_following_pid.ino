@@ -12,26 +12,27 @@ float d;
 float offset[8] = {1, 1.02, 1.11, 0.99, 0.81, 0.88, 0.82, 0.89};
 
 //for pid
-float Kp = 1.0;
+float Kp = 40;
 float Ki = 0.025;
 float Kd = 0;
 float output;
 float error, errorSum, errorOld;
 
 //for motor movement
-int leftMotorBaseSpeed = 25;
-int rightMotorBaseSpeed = 25;
+int leftMotorBaseSpeed = 50;
+int rightMotorBaseSpeed = 50;
 int min_speed = -35;
 int max_speed = 45;
 float leftMotorSpeed = 0;  // Initialise Speed variables
 float rightMotorSpeed = 0;
-
+int magic_number = 20;
 //pin for motor
 int enL = 5;
 int dirL = 7;
 int enR = 6;
 int dirR = 8;
 
+int led1 = 9 ;
 void setup() {
   Wire.begin();
   Serial.begin(9600);
@@ -44,22 +45,31 @@ void setup() {
   pinMode(enR, OUTPUT);
   pinMode(dirL, OUTPUT);
   pinMode(dirR, OUTPUT);
+  pinMode(led1,OUTPUT);
 }
 
 void loop() {
-  WA = weightedAverage();
-  //output = pid(WA);
-  motor_speed(WA);
+ I2C_led();
+read_sunfounder();
+  output = pid(WA);
+  motor_speed(output);
   //motorLeft(100,0);
   //motorRight(100, 0);
   //turn90();
 }
-
-float weightedAverage() {
-  Serial.println("bbbbb");
+void I2C_led(){
+  Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
+  if(Wire.available()){
+    digitalWrite(led1,HIGH);
+    }else{
+      digitalWrite(led1,LOW);
+      }
+  
+  }
+void read_sunfounder(){
   Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
   while (Wire.available())
-  {Serial.println("aaa");
+  { digitalWrite(led1,HIGH);
     data[t] = Wire.read();
     if (t < 15) {
       t++;
@@ -67,9 +77,7 @@ float weightedAverage() {
     else {
       t = 0;
     }
-  }
-  
-  Serial.print("data[1]:");
+     Serial.print("data[1]:");
   Serial.println(data[0] * offset[0]);
   Serial.print("data[2]:");
   Serial.println(data[2] * offset[1]);
@@ -88,28 +96,27 @@ float weightedAverage() {
   delay(500);
   sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
   sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
-  d = (sumvalueweight) / (sumvalue);
-  Serial.println(d);
-  Serial.print("sumvalue ==   ");
-  Serial.println(sumvalue);
-Serial.println(d);
-  return d;
-}
+  WA = (sumvalueweight) / (sumvalue);
+  }
+  
+
+  }
+
 
 float pid(long lineDist)
 {
-  errorOld = error;        // Save the old error for differential component
+  //errorOld = error;        // Save the old error for differential component
   error = lineDist;  // Calculate the error in position
   errorSum += error;
   //Serial.println(error);
 
   float proportional = error * Kp;  // Calculate the components of the PID
-
+/*
   float integral = errorSum * Ki;
 
   float differential = (error - errorOld) * Kd;
-
-  long output = proportional + integral + differential;  // Calculate the result
+*/
+  long output = proportional ;  // Calculate the result
 
   return output;
 }
@@ -120,7 +127,7 @@ void motor_speed(float output)
   rightMotorSpeed = rightMotorBaseSpeed - output;
   Serial.println("aaaaa");
 
-  if (leftMotorSpeed > 23)
+  if (leftMotorSpeed > magic_number)
   {
     leftMotorSpeed = constrain(leftMotorSpeed, min_speed, max_speed);
     //MOTOR.setSpeedDir1(abs(leftMotorSpeed), DIRR); Forward
@@ -137,7 +144,7 @@ void motor_speed(float output)
     Serial.print("   ");
   }
 
-  if (rightMotorSpeed > 23)
+  if (rightMotorSpeed > magic_number)
   {
     rightMotorSpeed = constrain(rightMotorSpeed, min_speed, max_speed);
     //MOTOR.setSpeedDir2(abs(rightMotorSpeed), DIRF);
@@ -169,7 +176,7 @@ void turn90() {
   analogWrite(enL, 100);
   digitalWrite(dirR, HIGH);
   analogWrite(enR, 100);
-  check90();
+  
 }
 
 void motorStop() {
@@ -179,32 +186,5 @@ void motorStop() {
   analogWrite(enR, 0);
 }
 
-void check90() {
-  Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
-  while (Wire.available())
-  {
-    data[t] = Wire.read();
-    if (t < 15) {
-      t++;
-    }
-    else {
-      t = 0;
-    }
-  }
-  float rightMost = (data[14] * offset[7]);
-  float leftMost = (data[0] * offset[1]);
-  
-  while (1) {
-    if (rightMost < 70 && leftMost < 70) {
-      break;
-    }
-  }
-  while (1) {
-    if (rightMost >= 70 && leftMost >= 70) {
-      break;
-    }
-  }
-  motorStop();
-}
 
 

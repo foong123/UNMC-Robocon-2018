@@ -39,8 +39,8 @@ int cross_value = 600;
 int ignore_flag = 0;
 int left_IR = 0;
 int right_IR = 0;
-int IR_left = A4;
-int IR_right = A5;
+int IR_left = 10;
+int IR_right = 11;
 int launch_flag = 0;
 int reload_flag = 0;
 
@@ -79,12 +79,11 @@ void loop() {
     }else{
       digitalWrite(led1,LOW);
       }
-  WA = weightedAverage();
  
   check_launchzone();
   go_reverse();
   check_reloadzone();
-  
+  go_staright();
 }
 void check_reloadzone(){
   while(1){
@@ -150,13 +149,14 @@ void check_launchzone(){
   Serial.println(left_IR);
   Serial.println(right_IR);
   
-  if(left_IR <= 100 ){
+  if(left_IR == HIGH ){
     Serial.println("left detect");
-     analogWrite(en2, 0);
-     digitalWrite(dir1,LOW);
-     analogWrite(en1, 50);
+     analogWrite(en1, 0);
+     digitalWrite(dir2,LOW);
+     analogWrite(en2, 50);
      while(1){
-      if(right_IR <= 100){
+      read_IR();
+      if(right_IR == HIGH){
          Serial.println("right detect");
         analogWrite(en2, 0);
         launch_flag = 1;
@@ -167,13 +167,15 @@ void check_launchzone(){
       }
       break;
     }
-    if(right_IR <= 100){
+    if(right_IR == HIGH){
       Serial.println("right detect");
-      analogWrite(en1, 0);
-     digitalWrite(dir2,LOW);
-     analogWrite(en2, 50);
+      analogWrite(en2, 0);
+     digitalWrite(dir1,LOW);
+     analogWrite(en1, 50);
      while(1){
+      read_IR();
       if(left_IR <= 100){
+        
          Serial.println("left detect");
         analogWrite(en1, 0);
          launch_flag = 1;
@@ -188,8 +190,8 @@ void check_launchzone(){
   }
 
 void read_IR(){
-  left_IR = analogRead(IR_left);
-  right_IR = analogRead(IR_right);
+  left_IR = digitalRead(IR_left);
+  right_IR = digitalRead(IR_right);
 
   }
 void go_straight(){
