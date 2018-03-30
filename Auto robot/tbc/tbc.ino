@@ -15,12 +15,12 @@ float sumvalueweight;
 float sumvalue;
 float WA;
 float d;
-float leftmost;
-float rightmost;
+float rightMost;
+float leftMost;
 float right2Most;
 float right3Most;
-float offset[8] = {1, 0.987, 0.97, 0.813, 0.734, 0.821, 0.78, 0.867};
-int cross_value = 600;
+float offset[8] = {1, 0.93, 0.98, 0.86, 0.76, 0.91, 0.89, 0.96};
+int cross_value = 650;
 
 //Motor_driver_Pin
 int en2 = 5; //red jumper wire
@@ -36,7 +36,7 @@ int leftMotorBaseSpeed = 70;
 int rightMotorBaseSpeed = 70;
 int min_speed = -85;
 int max_speed = 85;
-int steps_90 = 365;         //Turn 90
+int steps_90 = 355;         //Turn 90
 int speedl = 0;
 int speedr = 0;
 int normal_speed = 50;
@@ -113,14 +113,25 @@ void loop() {
     digitalWrite(led1, LOW);
   }
 
-  turnRight90();                    //First right turn on a 90 junction
+//StartZone
+  //turnRight90();                    //First right turn on a 90 junction
+  //go_straight();
+
+//TZ1
   turnLeft90();                     //First left turn on Big Cross
+  go_straight();
   ignorecross();                    //Ignore small cross
   check_launchzone();               //Allignment of launching zone
   //line_follow(forward);
-  //go_reverse();
+  go_reverse();
   //check_reloadzone();
   //go_straight();
+
+ //TZ2
+
+ //TZ3
+
+
 }
 
 void turnRight90() {
@@ -134,9 +145,9 @@ void turnRight90() {
     //Serial.println(right3Most);
 
     //Check condition
-    if (rightMost >= 70 && right2Most >= 70 && right3Most >= 70) {
+    if (rightMost >= 55 && right2Most >= 61 && right3Most >= 65) {
       //debug line
-      //Serial.print("I see a right turn");
+      Serial.print("I see a right turn");
       smallreverse();         //Re-adjust the robot for perfect turning
       turnRightcross();       //Turn right by 90
       break;
@@ -186,10 +197,27 @@ void Turn90() {
 void turnLeft90() {
   while (1) {
     line_follow(forward);
-    Serial.println(sumvalue);
+    //Serial.println(sumvalue);
     if (sumvalue >= cross_value ) {
-      smallreverse();
+      steps = 0;
+      smallreverse1();
       turnLeftcross();
+      break;
+    }
+  }
+}
+
+void smallreverse1() {
+  //debug line
+  //Serial.print("I need to reverse a little bit for perfect turn");
+  attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
+  while (1) {
+    digitalWrite(dir2, HIGH);
+    analogWrite(en2, 30);
+    digitalWrite(dir1, HIGH);
+    analogWrite(en1, 30);
+    if (steps > 30) {
+      steps = 0;
       break;
     }
   }
@@ -209,7 +237,7 @@ void turnLeftcross() {
 void ignorecross() {
   while (1) {
     //debug line
-    Serial.println("In ignore");
+    //Serial.println("In ignore");
     line_follow(forward);                    //Line follow in forward direction
     read_sunfounder();                       //Reads sunfounder value and correct it
     if (sumvalue >= cross_value) {
@@ -223,17 +251,17 @@ void check_launchzone() {
   while (1) {
     line_follow(forward);
     read_IR();
-    Serial.println(left_IR);
-    Serial.println(right_IR);
+    //Serial.println(left_IR);
+    //Serial.println(right_IR);
     if (left_IR == HIGH ) {
-      Serial.println("left detect");
+      //Serial.println("left detect");
       analogWrite(en1, 0);
       digitalWrite(dir2, LOW);
       analogWrite(en2, 50);
       while (1) {
         read_IR();
         if (right_IR == HIGH) {
-          Serial.println("right detect");
+          //Serial.println("right detect");
           analogWrite(en2, 0);
           launch_flag = 1;
           delay(5000);
@@ -243,14 +271,14 @@ void check_launchzone() {
       break;
     }
     if (right_IR == HIGH) {
-      Serial.println("right detect");
+      //Serial.println("right detect");
       analogWrite(en2, 0);
       digitalWrite(dir1, LOW);
       analogWrite(en1, 50);
       while (1) {
         read_IR();
         if (left_IR == HIGH) {
-          Serial.println("left detect");
+          //Serial.println("left detect");
           analogWrite(en1, 0);
           launch_flag = 1;
           delay(5000);
@@ -272,9 +300,9 @@ void go_reverse() {
   while (1) {
     read_sunfounder();
     line_follow(reverse);
-    Serial.println("go straight");
+    //Serial.println("go straight");
     if (steps >= 300) {
-      Serial.println("Start check 2nd cross");
+      //Serial.println("Start check 2nd cross");
       break;
     }
   }
@@ -289,17 +317,17 @@ void check_reloadzone() {
     }
     line_follow(reverse);
     read_IR();
-    Serial.println(left_IR);
-    Serial.println(right_IR);
+    //Serial.println(left_IR);
+    //Serial.println(right_IR);
     if (right_IR == HIGH ) {
-      Serial.println("left detect");
+      //Serial.println("left detect");
       analogWrite(en2, 0);
       digitalWrite(dir1, HIGH);
       analogWrite(en1, 50);
       while (1) {
         read_IR();
         if (left_IR == HIGH) {
-          Serial.println("right detect");
+          //Serial.println("right detect");
           analogWrite(en1, 0);
           reload_flag = 1;
           delay(5000);
@@ -309,14 +337,14 @@ void check_reloadzone() {
       break;
     }
     if (left_IR == HIGH) {
-      Serial.println("right detect");
+      //Serial.println("right detect");
       analogWrite(en1, 0);
       digitalWrite(dir2, HIGH);
       analogWrite(en2, 50);
       while (1) {
         read_IR();
         if (right_IR == HIGH) {
-          Serial.println("left detect");
+          //Serial.println("left detect");
           analogWrite(en2, 0);
           reload_flag = 1;
           delay(5000);
@@ -332,9 +360,10 @@ void go_straight() {
   steps = 0;
   while (1) {
     line_follow(forward);
-    Serial.println("go straight");
-    if (steps >= 300) {
-      Serial.println("Start check 2nd cross");
+    //Serial.println("go straight");
+    if (steps >= 100) {
+      //Serial.println("Start check 2nd cross");
+      steps = 0;
       break;
     }
   }
@@ -481,6 +510,7 @@ void read_sunfounder() {
     }
     sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
     sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
+    //Serial.println(sumvalue);
     WA = (sumvalueweight) / (sumvalue);
     rightMost = (data[0] * offset[1]);
     leftMost = (data[14] * offset[7]);
@@ -491,7 +521,7 @@ void read_sunfounder() {
 
 void cal() {
   steps++;
-  Serial.println(steps);
+  //Serial.println(steps);
   if (steps >= 10000) {
     steps = 0;
   }
