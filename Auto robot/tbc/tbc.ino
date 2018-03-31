@@ -104,6 +104,10 @@ int led13 = 24;      // TZ3 go forward + allignment // RED LED
 int led14 = 25;      // TZ3 reverse // RED LED
 int led15 = 26;      // Check Manual Bot// RED LED
 
+//Ultrasonic
+int led16 = 42;
+int led17 = 44;
+
 //Flags
 int ignore_flag = 0;
 int launch_flag = 0;
@@ -144,6 +148,8 @@ void setup() {
   pinMode(led13, OUTPUT);
   pinMode(led14, OUTPUT);
   pinMode(led15, OUTPUT);
+  pinMode(led16, OUTPUT);
+  pinMode(led17, OUTPUT);
 }
 
 void loop() {
@@ -185,6 +191,8 @@ void goTZ1()
 
 void TZ1()
 {
+  digitalWrite(led16, LOW);
+  digitalWrite(led17, LOW);
   go_launchzone();               //Allignment of launching zone
   go_reverse();
   check_reloadzone();
@@ -192,6 +200,7 @@ void TZ1()
 
 void goTZ2()
 {
+  go_straight();
   turnRightcrossTZ2();
   turnLeft90TZ2();
   delay(3000);
@@ -200,6 +209,8 @@ void goTZ2()
 
 void TZ2()
 {
+  digitalWrite(led16, LOW);
+  digitalWrite(led17, LOW);
   check_launchzoneTZ2();
   go_reverseTZ2();
   check_reloadzoneTZ2();
@@ -207,11 +218,11 @@ void TZ2()
 
 void TZ3()
 {
-  while(1){
-  go_straightTZ3();
-  check_launchzoneTZ3();
-  go_reverseTZ3();
-  check_reloadzoneTZ3();
+  while (1) {
+    go_straightTZ3();
+    check_launchzoneTZ3();
+    go_reverseTZ3();
+    check_reloadzoneTZ3();
   }
 }
 
@@ -446,7 +457,14 @@ void check_reloadzone() {
         {
           close_flag = 0;
           break;
-
+        }
+        else if (close_flag == 3)
+        {
+          goto tz1;
+tz1:
+          close_flag = 0;
+          TZ1();
+          break;
         }
         else {
           check_ultrasonic2();              //if manual bot is there, go TZ1
@@ -465,6 +483,7 @@ void check_ultrasonic1() {
   if (sonar1 <= manual_dist && sonar1 > 1) {
     //Serial.println("lst detected");
     close_flag = 1;
+    digitalWrite(led16, HIGH);
   }
   else
   {
@@ -478,9 +497,8 @@ void check_ultrasonic2 () {
   //Serial.print("2nd ultrasonic : ");
   //Serial.println(sonar2);
   if (sonar2 <= manual_dist && sonar2 > 0) {
-    goto tz1;
-tz1:
-    TZ1();
+    digitalWrite(led17, HIGH);
+    close_flag = 3;
   }
 }
 
@@ -592,11 +610,18 @@ void check_reloadzoneTZ2() {
           close_flag = 0;
           break;
         }
+        else if (close_flag == 3)
+        {
+          goto tz2;
+tz1:
+          close_flag = 0;
+          TZ2();
+          break;
+        }
         else {
-          check_ultrasonic2TZ2();              //if manual bot is there, go TZ2
+          check_ultrasonic2();              //if manual bot is there, go TZ1
         }
       }
-      break;
     }
   }
 }
@@ -609,6 +634,7 @@ void check_ultrasonic1TZ2() {
   if (sonar1 <= manual_dist && sonar1 > 1) {
     //Serial.println("lst detected");
     close_flag = 1;
+    digitalWrite(led16, HIGH);
   }
   else
   {
@@ -623,9 +649,8 @@ void check_ultrasonic2TZ2() {
   //Serial.println(sonar2);
   if (sonar2 <= manual_dist && sonar2 > 0) {
     //Serial.println("2nd detected");
-    goto tz2;
-tz2:
-    TZ2();
+    digitalWrite(led17, HIGH);
+    close_flag = 3;
   }
 }
 
