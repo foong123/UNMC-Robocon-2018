@@ -20,7 +20,7 @@ float leftMost;
 float right2Most;
 float right3Most;
 float offset[8] = {1, 0.93, 0.98, 0.86, 0.76, 0.91, 0.89, 0.96};
-int cross_value = 650;
+int cross_value = 600;
 
 //Motor_driver_Pin
 int en2 = 5; //red jumper wire
@@ -30,6 +30,7 @@ int dir1 = 8; //green jumper wire
 
 //Motor_Pin
 int encoder1 = 2; //yellow jumper wire
+int encoder2 = 3;
 
 //Motor_Variables
 int leftMotorBaseSpeed = 70;
@@ -37,9 +38,10 @@ int rightMotorBaseSpeed = 70;
 int min_speed = -85;
 int max_speed = 85;
 int steps_90 = 355;         //Turn 90
+int steps_cross = 330;
 int speedl = 0;
 int speedr = 0;
-int normal_speed = 50;
+int normal_speed = 70;
 volatile int steps = 0;     //Encoder starting values
 float leftMotorSpeed = 0;  // Initialise Speed variables
 float rightMotorSpeed = 0;
@@ -63,7 +65,7 @@ int echo2 = 48; //red jumper wire(back)
 int max_dist = 30;
 double sonar1 = 0;
 double sonar2 = 0;
-double manual_dist = 20.0;
+double manual_dist = 23.0;
 NewPing ultrasonic1(trig1, echo1, max_dist); // NewPing setup of pins and maximum distance.
 NewPing ultrasonic2(trig2, echo2, max_dist); // NewPing setup of pins and maximum distance.
 
@@ -74,8 +76,33 @@ float Kd = 0;
 float error, errorSum, errorOld;
 long output;
 
-//debug
-int led1 = 9; //green jumper wire
+//debugLine
+
+// I2C
+int led1 = 9;       // green jumper wire // i2c  // Orange LED
+
+//StartZone
+int led2 = 28;      // Startzone  // Red LED
+int led3 = 30;      // Turn90     // Red LED
+
+//TZ1
+
+int led4 = 32;      // TZ1 Left Cross   // Green LED
+int led5 = 34;      // Allignment TZ1   // Green LED
+int led6 = 36;      // Reverse TZ1 // Green LED
+int led7 = 38;      // Check Manual bot // Green LED
+
+//TZ2
+int led8 = 39;      // Turn Right Cross // Blue LED
+int led9 = 41;      // TZ2 Left Cross // Blue LED
+int led10 = 43;      // Allignment TZ2 // Blue LED
+int led11 = 45;      // Reverse TZ2 // Blue LED
+int led12 = 47;     // Check Manual Bot // Blue LED
+
+// TZ3
+int led13 = 24;      // TZ3 go forward + allignment // RED LED
+int led14 = 25;      // TZ3 reverse // RED LED
+int led15 = 26;      // Check Manual Bot// RED LED
 
 //Flags
 int ignore_flag = 0;
@@ -103,6 +130,20 @@ void setup() {
   pinMode(dir2, OUTPUT);
   pinMode(dir1, OUTPUT);
   pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
+  pinMode(led3, OUTPUT);
+  pinMode(led4, OUTPUT);
+  pinMode(led5, OUTPUT);
+  pinMode(led6, OUTPUT);
+  pinMode(led7, OUTPUT);
+  pinMode(led8, OUTPUT);
+  pinMode(led9, OUTPUT);
+  pinMode(led10, OUTPUT);
+  pinMode(led11, OUTPUT);
+  pinMode(led12, OUTPUT);
+  pinMode(led13, OUTPUT);
+  pinMode(led14, OUTPUT);
+  pinMode(led15, OUTPUT);
 }
 
 void loop() {
@@ -113,28 +154,69 @@ void loop() {
     digitalWrite(led1, LOW);
   }
 
-//StartZone
-  //turnRight90();                    //First right turn on a 90 junction
-  //go_straight();
+  //StartZone
+  startzone();
 
-//TZ1
-  turnLeft90();                     //First left turn on Big Cross
+  // TZ1
+  goTZ1();
+  TZ1();
+
+  //TZ2
+  goTZ2();
+  TZ2();
+
+  //TZ3
+  TZ3();
+}
+
+void startzone()
+{
+  turnRight90();                    //First right turn on a 90 junction
   go_straight();
-  ignorecross();                    //Ignore small cross
-  check_launchzone();               //Allignment of launching zone
-  //line_follow(forward);
+}
+
+void goTZ1()
+{
+  turnLeft90();                   // Enter TZ1
+  delay(3000);
+  go_straightTZ1();
+}
+
+
+void TZ1()
+{
+  go_launchzone();               //Allignment of launching zone
   go_reverse();
-  //check_reloadzone();
-  //go_straight();
+  check_reloadzone();
+}
 
- //TZ2
+void goTZ2()
+{
+  turnRightcrossTZ2();
+  turnLeft90TZ2();
+  delay(3000);
+}
 
- //TZ3
 
+void TZ2()
+{
+  check_launchzoneTZ2();
+  go_reverseTZ2();
+  check_reloadzoneTZ2();
+}
 
+void TZ3()
+{
+  while(1){
+  go_straightTZ3();
+  check_launchzoneTZ3();
+  go_reverseTZ3();
+  check_reloadzoneTZ3();
+  }
 }
 
 void turnRight90() {
+  digitalWrite(led2, HIGH);
   while (1) {
     line_follow(forward);                 //Line follow in forward direction
     //debug line
@@ -146,10 +228,13 @@ void turnRight90() {
 
     //Check condition
     if (rightMost >= 55 && right2Most >= 61 && right3Most >= 65) {
+      digitalWrite(led2, LOW);
+      digitalWrite(led3, HIGH);
       //debug line
       Serial.print("I see a right turn");
       smallreverse();         //Re-adjust the robot for perfect turning
       turnRightcross();       //Turn right by 90
+      digitalWrite(led3, LOW);
       break;
     }
   }
@@ -183,6 +268,7 @@ void turnRightcross() {
 }
 
 void Turn90() {
+  steps = 0;
   //debug line
   //Serial.print("Turn 90");
   while (1) {
@@ -194,7 +280,22 @@ void Turn90() {
   }
 }
 
+void go_straight() {
+  steps = 0;
+  while (1) {
+    line_follow(forward);
+    //Serial.println("go straight");
+    if (steps >= 50) {
+      //Serial.println("Start check 2nd cross");
+      steps = 0;
+      break;
+    }
+  }
+}
+
+
 void turnLeft90() {
+  digitalWrite(led4, HIGH);
   while (1) {
     line_follow(forward);
     //Serial.println(sumvalue);
@@ -202,6 +303,7 @@ void turnLeft90() {
       steps = 0;
       smallreverse1();
       turnLeftcross();
+      digitalWrite(led4, LOW);
       break;
     }
   }
@@ -216,7 +318,7 @@ void smallreverse1() {
     analogWrite(en2, 30);
     digitalWrite(dir1, HIGH);
     analogWrite(en1, 30);
-    if (steps > 30) {
+    if (steps > 15) {
       steps = 0;
       break;
     }
@@ -231,23 +333,38 @@ void turnLeftcross() {
   analogWrite(en2, 75);
   digitalWrite(dir1, HIGH);
   analogWrite(en1, 75);
-  Turn90();
+  TurnCross();
 }
 
-void ignorecross() {
+
+void TurnCross() {
+  //debug line
+  //Serial.print("Turn 90");
   while (1) {
-    //debug line
-    //Serial.println("In ignore");
-    line_follow(forward);                    //Line follow in forward direction
-    read_sunfounder();                       //Reads sunfounder value and correct it
-    if (sumvalue >= cross_value) {
-      ignore_flag = 1;                       //Raise a flag to ignore small cross
+    if (steps >= steps_cross) {        //Turn 90
+      motorStop();                  //Motor Stops after turning 90
+      steps = 0;                    //Reset Encoder value
       break;
     }
   }
 }
 
-void check_launchzone() {
+void go_straightTZ1() {
+  steps = 0;
+  while (1) {
+    line_follow(forward);
+    //Serial.println("go straight");
+    if (steps >= 150) {
+      //Serial.println("Start check 2nd cross");
+      steps = 0;
+      break;
+    }
+  }
+}
+
+
+void go_launchzone() {
+  digitalWrite(led5, HIGH);
   while (1) {
     line_follow(forward);
     read_IR();
@@ -264,6 +381,7 @@ void check_launchzone() {
           //Serial.println("right detect");
           analogWrite(en2, 0);
           launch_flag = 1;
+          digitalWrite(led5, LOW);
           delay(5000);
           break;
         }
@@ -281,6 +399,7 @@ void check_launchzone() {
           //Serial.println("left detect");
           analogWrite(en1, 0);
           launch_flag = 1;
+          digitalWrite(led5, LOW);
           delay(5000);
           break;
         }
@@ -296,74 +415,43 @@ void read_IR() {
 }
 
 void go_reverse() {
+  digitalWrite(led6, HIGH);
+  attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
   steps = 0;
   while (1) {
     read_sunfounder();
     line_follow(reverse);
     //Serial.println("go straight");
-    if (steps >= 300) {
-      //Serial.println("Start check 2nd cross");
+    if (steps >= 1000) {
+      digitalWrite(led6, LOW);
       break;
     }
   }
 }
 
 void check_reloadzone() {
+  digitalWrite(led7, HIGH);
   while (1) {
-    if (close_flag == 0) {
-      check_ultrasonic1();
-    } else {
-      check_ultrasonic2();
-    }
     line_follow(reverse);
-    read_IR();
-    //Serial.println(left_IR);
-    //Serial.println(right_IR);
-    if (right_IR == HIGH ) {
-      //Serial.println("left detect");
-      analogWrite(en2, 0);
-      digitalWrite(dir1, HIGH);
-      analogWrite(en1, 50);
-      while (1) {
-        read_IR();
-        if (left_IR == HIGH) {
-          //Serial.println("right detect");
-          analogWrite(en1, 0);
-          reload_flag = 1;
-          delay(5000);
-          break;
+    if (sumvalue >= cross_value) {
+      digitalWrite(led7, LOW);
+      motorStop();
+      delay(4000);
+      while (1)
+      {
+        if (close_flag == 0) {
+          check_ultrasonic1();
         }
-      }
-      break;
-    }
-    if (left_IR == HIGH) {
-      //Serial.println("right detect");
-      analogWrite(en1, 0);
-      digitalWrite(dir2, HIGH);
-      analogWrite(en2, 50);
-      while (1) {
-        read_IR();
-        if (right_IR == HIGH) {
-          //Serial.println("left detect");
-          analogWrite(en2, 0);
-          reload_flag = 1;
-          delay(5000);
+        else if (close_flag == 2)
+        {
+          close_flag = 0;
           break;
-        }
-      }
-      break;
-    }
-  }
-}
 
-void go_straight() {
-  steps = 0;
-  while (1) {
-    line_follow(forward);
-    //Serial.println("go straight");
-    if (steps >= 100) {
-      //Serial.println("Start check 2nd cross");
-      steps = 0;
+        }
+        else {
+          check_ultrasonic2();              //if manual bot is there, go TZ1
+        }
+      }
       break;
     }
   }
@@ -372,26 +460,261 @@ void go_straight() {
 void check_ultrasonic1() {
   delay(50);
   sonar1 = ultrasonic1.ping_cm();
-  Serial.print("ist ultrasonic : ");
-  Serial.println(sonar1);
-  if (sonar1 <= manual_dist && sonar1 > 0) {
-    Serial.println("lst detected");
+  //Serial.print("ist ultrasonic : ");
+  //Serial.println(sonar1);
+  if (sonar1 <= manual_dist && sonar1 > 1) {
+    //Serial.println("lst detected");
     close_flag = 1;
+  }
+  else
+  {
+    close_flag = 2;           // He no see manual robot
   }
 }
 
 void check_ultrasonic2 () {
   delay(50);
   sonar2 = ultrasonic2.ping_cm();
-  Serial.print("2nd ultrasonic : ");
-  Serial.println(sonar2);
+  //Serial.print("2nd ultrasonic : ");
+  //Serial.println(sonar2);
   if (sonar2 <= manual_dist && sonar2 > 0) {
-    Serial.println("2nd detected");
-    motorStop();
-    while (1);
+    goto tz1;
+tz1:
+    TZ1();
   }
 }
 
+
+void turnRightcrossTZ2() {
+  digitalWrite(led8, HIGH);
+  //debug line
+  //Serial.print("Turning Right");
+  attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);     //Turning with encoder
+  digitalWrite(dir2, HIGH);
+  analogWrite(en2, 75);
+  digitalWrite(dir1, LOW);
+  analogWrite(en1, 75);
+  Turn90();
+  digitalWrite(led8, LOW);
+}
+
+void turnLeft90TZ2() {
+  digitalWrite(led9, HIGH);
+  while (1) {
+    line_follow(forward);
+    //Serial.println(sumvalue);
+    if (sumvalue >= cross_value ) {
+      steps = 0;
+      smallreverse();
+      turnLeftcross();
+      digitalWrite(led9, LOW);
+      break;
+    }
+  }
+}
+
+void check_launchzoneTZ2() {
+  digitalWrite(led10, HIGH);
+  while (1) {
+    line_follow(forward);
+    read_IR();
+    //Serial.println(left_IR);
+    //Serial.println(right_IR);
+    if (left_IR == HIGH ) {
+      //Serial.println("left detect");
+      analogWrite(en1, 0);
+      digitalWrite(dir2, LOW);
+      analogWrite(en2, 50);
+      while (1) {
+        read_IR();
+        if (right_IR == HIGH) {
+          //Serial.println("right detect");
+          analogWrite(en2, 0);
+          launch_flag = 1;
+          digitalWrite(led10, LOW);
+          delay(5000);
+          break;
+        }
+      }
+      break;
+    }
+    if (right_IR == HIGH) {
+      //Serial.println("right detect");
+      analogWrite(en2, 0);
+      digitalWrite(dir1, LOW);
+      analogWrite(en1, 50);
+      while (1) {
+        read_IR();
+        if (left_IR == HIGH) {
+          //Serial.println("left detect");
+          analogWrite(en1, 0);
+          launch_flag = 1;
+          digitalWrite(led10, LOW);
+          delay(5000);
+          break;
+        }
+      }
+      break;
+    }
+  }
+}
+
+void go_reverseTZ2() {
+  digitalWrite(led11, HIGH);
+  attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
+  steps = 0;
+  while (1) {
+    read_sunfounder();
+    line_follow(reverse);
+    //Serial.println("go straight");
+    if (steps >= 1000) {
+      digitalWrite(led11, LOW);
+      break;
+    }
+  }
+}
+
+void check_reloadzoneTZ2() {
+  digitalWrite(led12, HIGH);
+  while (1) {
+    line_follow(reverse);
+    if (sumvalue >= cross_value) {
+      digitalWrite(led12, LOW);
+      motorStop();
+      delay(4000);
+      while (1)
+      {
+        if (close_flag == 0) {
+          check_ultrasonic1TZ2();
+        }
+        else if (close_flag == 2)
+        {
+          close_flag = 0;
+          break;
+        }
+        else {
+          check_ultrasonic2TZ2();              //if manual bot is there, go TZ2
+        }
+      }
+      break;
+    }
+  }
+}
+
+void check_ultrasonic1TZ2() {
+  delay(50);
+  sonar1 = ultrasonic1.ping_cm();
+  //Serial.print("ist ultrasonic : ");
+  //Serial.println(sonar1);
+  if (sonar1 <= manual_dist && sonar1 > 1) {
+    //Serial.println("lst detected");
+    close_flag = 1;
+  }
+  else
+  {
+    close_flag = 2;           // He no see manual robot
+  }
+}
+
+void check_ultrasonic2TZ2() {
+  delay(50);
+  sonar2 = ultrasonic2.ping_cm();
+  //Serial.print("2nd ultrasonic : ");
+  //Serial.println(sonar2);
+  if (sonar2 <= manual_dist && sonar2 > 0) {
+    //Serial.println("2nd detected");
+    goto tz2;
+tz2:
+    TZ2();
+  }
+}
+
+void go_straightTZ3() {
+  steps = 0;
+  digitalWrite(led13, HIGH);
+  while (1) {
+    line_follow(forward);
+    //Serial.println("go straight");
+    if (steps >= 1500) {
+      //Serial.println("Start check 2nd cross");
+      steps = 0;
+      break;
+    }
+  }
+}
+
+void check_launchzoneTZ3() {
+  while (1) {
+    line_follow(forward);
+    read_IR();
+    //Serial.println(left_IR);
+    //Serial.println(right_IR);
+    if (left_IR == HIGH ) {
+      //Serial.println("left detect");
+      analogWrite(en1, 0);
+      digitalWrite(dir2, LOW);
+      analogWrite(en2, 50);
+      while (1) {
+        read_IR();
+        if (right_IR == HIGH) {
+          //Serial.println("right detect");
+          analogWrite(en2, 0);
+          launch_flag = 1;
+          digitalWrite(led13, LOW);
+          delay(5000);
+          break;
+        }
+      }
+      break;
+    }
+    if (right_IR == HIGH) {
+      //Serial.println("right detect");
+      analogWrite(en2, 0);
+      digitalWrite(dir1, LOW);
+      analogWrite(en1, 50);
+      while (1) {
+        read_IR();
+        if (left_IR == HIGH) {
+          //Serial.println("left detect");
+          analogWrite(en1, 0);
+          launch_flag = 1;
+          digitalWrite(led13, LOW);
+          delay(5000);
+          break;
+        }
+      }
+      break;
+    }
+  }
+}
+
+void go_reverseTZ3() {
+  digitalWrite(led14, HIGH);
+  attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
+  steps = 0;
+  while (1) {
+    read_sunfounder();
+    line_follow(reverse);
+    //Serial.println("go straight");
+    if (steps >= 2000) {
+      digitalWrite(led14, LOW);
+      break;
+    }
+  }
+}
+
+void check_reloadzoneTZ3() {
+  digitalWrite(led15, HIGH);
+  while (1) {
+    line_follow(reverse);
+    if (sumvalue >= cross_value) {
+      digitalWrite(led15, LOW);
+      motorStop();
+      delay(2000);
+      break;
+    }
+  }
+}
 void motorLeft(float speed_pwm, int dir) {
   digitalWrite(dir2, dir);
   analogWrite(en2, speed_pwm);
@@ -428,35 +751,35 @@ long pid(float lineDist)
 
 void line_follow(int dir) {
   read_sunfounder();
-  if (WA >= 1.4) {
+  if (WA >= 1.5) {
     speedl = normal_speed;
     speedr = normal_speed - 10;
-    if (WA >= 3.66) {
+    if (WA >= 2.5) {
       speedl += 17.5;
-      if (WA >= 9.63) {
+      if (WA >= 3.0) {
         speedl += 10;
-        if (data[14]*offset[7] >= 70) {
+        if (data[0]*offset[0] >= 70.0) {
           speedl += 15;
           speedr = 25;
         }
       }
     }
-  } else if (WA <= 0.6) {
+  } else if (WA <= 0.5) {
     speedl = normal_speed - 10;
     speedr = normal_speed;
-    if (WA <= -4.4) {
+    if (WA <= -0.5) {
       speedr += 17.5;
-      if (WA <= -8) {
+      if (WA <= -1.0) {
         speedr += 20;
-        if (data[0]*offset[0] >= 70) {
+        if (data[14]*offset[7] >= 70.0) {
           speedr += 15;
           speedl = 25;
         }
       }
     }
   } else {
-    speedr = normal_speed * 2;
-    speedl = normal_speed * 2;
+    speedr = normal_speed;
+    speedl = normal_speed;
   }
   motorLeft(speedl, dir);
   motorRight(speedr, dir);
