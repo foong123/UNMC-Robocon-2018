@@ -21,6 +21,7 @@ float right2Most;
 float right3Most;
 float offset[8] = {1, 0.93, 0.98, 0.86, 0.76, 0.91, 0.89, 0.96};
 int cross_value = 600;
+int value90 = 360;
 
 //Motor_driver_Pin
 int en2 = 5; //red jumper wire
@@ -231,6 +232,7 @@ void turnRight90() {
   while (1) {
     line_follow(forward);                 //Line follow in forward direction
     //debug line
+    //Serial.println(sumvalue);
     //Serial.print(rightMost);
     //Serial.print("  ");
     //Serial.print(right2Most);
@@ -238,11 +240,11 @@ void turnRight90() {
     //Serial.println(right3Most);
 
     //Check condition
-    if (rightMost >= 55 && right2Most >= 61 && right3Most >= 65) {
+    if (sumvalue> 385 && sumvalue < 405) {
       digitalWrite(led2, LOW);
       digitalWrite(led3, HIGH);
       //debug line
-      Serial.print("I see a right turn");
+      //Serial.print("I see a right turn");
       smallreverse();         //Re-adjust the robot for perfect turning
       turnRightcross();       //Turn right by 90
       digitalWrite(led3, LOW);
@@ -834,9 +836,9 @@ float weightedAverage() {
   leftMost = (data[0] * offset[1]);
   right3Most = (data[12] * offset[6]);
   right2Most = (data[10] * offset[5]);
-  // Serial.print("sumvalue ==   ");
+  //Serial.print("sumvalue ==   ");
   //Serial.println(sumvalue);
-  // delay(500);
+  //delay(500);
   return d ;
 }
 
