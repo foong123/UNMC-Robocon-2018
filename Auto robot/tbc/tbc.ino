@@ -304,7 +304,6 @@ void go_straight() {
   }
 }
 
-
 void turnLeft90() {
   digitalWrite(led4, HIGH);
   while (1) {
@@ -346,7 +345,6 @@ void turnLeftcross() {
   analogWrite(en1, 75);
   TurnCross();
 }
-
 
 void TurnCross() {
   //debug line
@@ -460,8 +458,6 @@ void check_reloadzone() {
         }
         else if (close_flag == 3)
         {
-          goto tz1;
-tz1:
           close_flag = 0;
           TZ1();
           break;
@@ -612,16 +608,15 @@ void check_reloadzoneTZ2() {
         }
         else if (close_flag == 3)
         {
-          goto tz2;
-tz1:
           close_flag = 0;
           TZ2();
           break;
         }
         else {
-          check_ultrasonic2();              //if manual bot is there, go TZ1
+          check_ultrasonic2();              //if manual bot is there, go TZ2
         }
       }
+       break;
     }
   }
 }
