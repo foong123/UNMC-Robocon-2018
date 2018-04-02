@@ -1,10 +1,11 @@
 import cv2
 import numpy as np
 import imutils
+import time
 
 error = 100
-lower = np.array([0,0,0])
-upper = np.array([70,255,70])
+lower = np.array([220,220,220])
+upper = np.array([255,255,255])
 
 cap = cv2.VideoCapture(0)
 
@@ -46,8 +47,11 @@ while True:
     if len(contour)>0:
         c = max(contour,key=cv2.contourArea)
         moment = cv2.moments(c)
-        cX = int(moment["m10"]/moment["m00"])
-        cY = int(moment["m01"]/moment["m00"])
+        if moment["m00"] != 0:
+            cX = int(moment["m10"]/moment["m00"])
+            cY = int(moment["m01"]/moment["m00"])
+        else:
+            cX = cX
 
         cv2.drawContours(frame,[c], -1, (0,255,0),3)
         cv2.putText(frame,'centroid',(cX,cY),cv2.FONT_HERSHEY_SIMPLEX,0.5,(255,255,255),2)
@@ -84,6 +88,7 @@ while True:
                                          
     else:
         print("No line")
+
 
     cv2.imshow('frame',frame)
 
