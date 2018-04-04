@@ -1,17 +1,17 @@
 #include <Wire.h>
 #define uchar unsigned char
-
+#define forward 0
+#define reverse 1
 //for sunfounder
 uchar t;
 uchar data[16];
 float sumvalueweight;
 float sumvalue;
-float WA = 0;
+float WA;
 float d;
 float leftmost;
 float rightmost;
-//float offset[8] = {1, 0.987, 0.97, 0.813, 0.734, 0.821, 0.78, 0.867};
-float offset[8] = {1.00 ,1.02, 1.05, 0.90, 0.76 ,0.82, 0.77 ,0.84};
+float offset[8] = {1, 0.987, 0.97, 0.813, 0.734, 0.821, 0.78, 0.867};
 
 //for pid
 float Kp = 30.0;
@@ -21,8 +21,8 @@ long output;
 float error, errorSum, errorOld;
 
 //for motor movement
-int leftMotorBaseSpeed = 150;
-int rightMotorBaseSpeed = 150;
+int leftMotorBaseSpeed = 70;
+int rightMotorBaseSpeed = 70;
 int min_speed = -85;
 int max_speed = 85;
 float leftMotorSpeed = 0;  // Initialise Speed variables
@@ -37,6 +37,13 @@ int led1 = 9;
 int magic_number  = 40;
 int cross_value = 600;
 int ignore_flag = 0;
+int left_IR = 0;
+int right_IR = 0;
+int IR_left = 10;
+int IR_right = 11;
+int launch_flag = 0;
+int reload_flag = 0;
+
 //pin for motor
 int en2 = 5;
 int dir2 = 7;
@@ -46,6 +53,17 @@ int speedl = 0;
 int speedr = 0;
 int normal_speed = 50;
 volatile int steps = 0;
+
+//for ADS
+int k = 200 * 26;
+int ADS0 = A3;
+int ADS1 = A1;
+//int ADS1 = 48;
+//int ADS0 = 49;
+double input0;
+double input1;
+float distance = 30.0;
+
 void setup() {
   Wire.begin();
   Serial.begin(115200);
@@ -60,165 +78,190 @@ void setup() {
   pinMode(dir2, OUTPUT);
   pinMode(dir1, OUTPUT);
   pinMode(led1, OUTPUT);
-
+  pinMode(IR_left, INPUT);
+  pinMode(IR_right, INPUT);
+  pinMode(ADS0, INPUT);
+  pinMode(ADS1, INPUT);
 }
 
 void loop() {
-
   Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
-<<<<<<< HEAD
-  if(Wire.available()){
-    digitalWrite(led1,HIGH);
-    }else{
-      digitalWrite(led1,LOW);
-      }
-   Serial.println(WA);
-  //WA = weightedAverage();
- // read_sunfounder();
-  line_follow();
-  /*
-  if(sumvalue >= cross_value){
-=======
   if (Wire.available()) {
     digitalWrite(led1, HIGH);
   } else {
     digitalWrite(led1, LOW);
   }
-  //WA = weightedAverage();
-  //read_sunfounder();
-  line_follow();
-  /*
-    if(sumvalue >= cross_value){
->>>>>>> 3a4627b2fe8cc795c2a71b00f3fdab44ded4c92b
-    attachInterrupt(digitalPinToInterrupt(encoder1),cal,CHANGE);
-    turncross();
-    go_straight();
-    ignorecross();
-    Serial.println("After ignore");
-    }*/
 
-  /*if(ignore_flag == 1){
-     go_straight();
-    while(1){
-      Serial.println("After flag");
-      read_sunfounder();
-      line_follow();
-      if(sumvalue >= cross_value){
-         Serial.println("3rd cross");
-        motorStop();
-        while(1);
-        }
-      }
-<<<<<<< HEAD
-   }*/
-=======
-    }*/
->>>>>>> 3a4627b2fe8cc795c2a71b00f3fdab44ded4c92b
+  //check_launchzone();
+  //go_reverse();
+  //check_reloadzone();
+  //go_staright();
+  //line_follow(forward);
+  checkADS();
 }
-void go_straight() {
+void check_reloadzone() {
+  while (1) {
+    line_follow(reverse);
+    read_IR();
+    Serial.println(left_IR);
+    Serial.println(right_IR);
+    if (left_IR == HIGH ) {
+      Serial.println("left detect");
+      analogWrite(en2, 0);
+      digitalWrite(dir1, HIGH);
+      analogWrite(en1, 50);
+      while (1) {
+        if (right_IR == HIGH) {
+          Serial.println("right detect");
+          analogWrite(en2, 0);
+          reload_flag = 1;
+          delay(5000);
+          break;
+        }
+
+      }
+      break;
+    }
+    if (right_IR == HIGH) {
+      Serial.println("right detect");
+      analogWrite(en1, 0);
+      digitalWrite(dir2, HIGH);
+      analogWrite(en2, 50);
+      while (1) {
+        if (left_IR == HIGH) {
+          Serial.println("left detect");
+          analogWrite(en1, 0);
+          reload_flag = 1;
+          delay(5000);
+          break;
+        }
+
+      }
+      break;
+    }
+  }
+}
+
+void go_reverse() {
   steps = 0;
-<<<<<<< HEAD
-  while(1){
-   line_follow();
-   Serial.println("go straight");
-    if(steps >= 300){
-=======
   while (1) {
     read_sunfounder();
-    line_follow();
+    line_follow(reverse);
     Serial.println("go straight");
     if (steps >= 300) {
->>>>>>> 3a4627b2fe8cc795c2a71b00f3fdab44ded4c92b
       Serial.println("Start check 2nd cross");
       break;
     }
 
   }
-<<<<<<< HEAD
-void line_follow(){
-  read_sunfounder();
-   if(WA >= 0.5){
-    speedl = normal_speed;
-    speedr = normal_speed - 10;
-    if(WA >= 2.8){
-      speedl += 17.5;
-      if(WA >= 3.5){
-        speedl += 10;
-        if(data[14]*offset[7] >= 70){
-          speedl += 15;
-          speedr = 25;
-=======
 
 }
-//0.9 center
-//-4.4 right (1,2)
-//-8.02 (0,1)
-//(5,6) 3.66
-//9.63 (6,7)
+void check_launchzone() {
+  while (1) {
+    line_follow(forward);
+    read_IR();
+    Serial.println(left_IR);
+    Serial.println(right_IR);
 
+    if (left_IR == HIGH ) {
+      Serial.println("left detect");
+      analogWrite(en1, 0);
+      digitalWrite(dir2, LOW);
+      analogWrite(en2, 50);
+      while (1) {
+        read_IR();
+        if (right_IR == HIGH) {
+          Serial.println("right detect");
+          analogWrite(en2, 0);
+          launch_flag = 1;
+          delay(5000);
+          break;
+        }
 
-void line_follow() {
+      }
+      break;
+    }
+    if (right_IR == HIGH) {
+      Serial.println("right detect");
+      analogWrite(en2, 0);
+      digitalWrite(dir1, LOW);
+      analogWrite(en1, 50);
+      while (1) {
+        read_IR();
+        if (left_IR <= 100) {
+
+          Serial.println("left detect");
+          analogWrite(en1, 0);
+          launch_flag = 1;
+          delay(5000);
+          break;
+        }
+
+      }
+      break;
+    }
+  }
+}
+
+void read_IR() {
+  left_IR = digitalRead(IR_left);
+  right_IR = digitalRead(IR_right);
+
+}
+void go_straight() {
+  steps = 0;
+  while (1) {
+
+    line_follow(forward);
+    Serial.println("go straight");
+    if (steps >= 300) {
+      Serial.println("Start check 2nd cross");
+      break;
+    }
+
+  }
+
+}
+void line_follow(int dir) {
   read_sunfounder();
-  Serial.println(WA);
-  if (WA >= 1.4) {
-    speedl = normal_speed*2;
-    speedr = normal_speed - 10*2;
-    if (WA >= 3.66) {
-      speedl += 17.5*2;
-      if (WA >= 9.63) {
-        speedl += 10*2;
+  if (WA >= 0.5) {
+    speedl = normal_speed;
+    speedr = normal_speed - 10;
+    if (WA >= 2.8) {
+      speedl += 17.5;
+      if (WA >= 3.5) {
+        speedl += 10;
         if (data[14]*offset[7] >= 70) {
-          speedl += 15*2;
-          speedr = 25*2*2;
->>>>>>> 3a4627b2fe8cc795c2a71b00f3fdab44ded4c92b
+          speedl += 15;
+          speedr = 25;
         }
       }
     }
-  } else if (WA <= 0.6) {
-    speedl = normal_speed - 10*2;
+  } else if (WA <= -0.5) {
+    speedl = normal_speed - 10;
     speedr = normal_speed;
-    if (WA <= -4.4) {
-      speedr += 17.5*2;
-      if (WA <= -8) {
-        speedr += 20*2;
+    if (WA <= -2.8) {
+      speedr += 17.5;
+      if (WA <= -3.5) {
+        speedr += 20;
         if (data[0]*offset[0] >= 70) {
-          speedr += 15*2;
-          speedl = 25*2*2;
+          speedr += 15;
+          speedl = 25;
         }
       }
     }
   } else {
-    speedr = normal_speed*2;
-    speedl = normal_speed *2;
+    speedr = normal_speed;
+    speedl = normal_speed;
   }
-  motorLeft(speedl, 0);
-  motorRight(speedr, 0);
+  motorLeft(speedl, dir);
+  motorRight(speedr, dir);
+
 
 }
 float weightedAverage() {
   //Serial.println("bbbbb");
-<<<<<<< HEAD
- read_sunfounder();
- /*
-  Serial.print("data[1]:");
-  Serial.println(data[0] * offset[0]);
-  Serial.print("data[2]:");
-  Serial.println(data[2] * offset[1]);
-  Serial.print("data[3]:");
-  Serial.println(data[4] * offset[2]);
-  Serial.print("data[4]:");
-  Serial.println(data[6] * offset[3]);
-  Serial.print("data[5]:");
-  Serial.println(data[8] * offset[4]);
-  Serial.print("data[6]:");
-  Serial.println(data[10] * offset[5]);
-  Serial.print("data[7]:");
-  Serial.println(data[12] * offset[6]);
-  Serial.print("data[8]:");
-  Serial.println(data[14] * offset[7]);
-  delay(500);
-=======
-  
+  read_sunfounder();
   /*
     Serial.print("data[1]:");
     Serial.println(data[0] * offset[0]);
@@ -237,7 +280,6 @@ float weightedAverage() {
     Serial.print("data[8]:");
     Serial.println(data[14] * offset[7]);
     //delay(500);
->>>>>>> 3a4627b2fe8cc795c2a71b00f3fdab44ded4c92b
   */
   sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
   sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
@@ -271,7 +313,7 @@ long pid(float lineDist)
 void ignorecross() {
   while (1) {
     Serial.println("In ignore");
-    line_follow();
+    line_follow(forward);
     read_sunfounder();
     if (sumvalue >= cross_value) {
       ignore_flag = 1;
@@ -334,43 +376,11 @@ void read_sunfounder() {
     else {
       t = 0;
     }
-    /*
-     Serial.print("data[1]:");
-  Serial.println(data[0] * offset[0]);
-  Serial.print("data[2]:");
-  Serial.println(data[2] * offset[1]);
-  Serial.print("data[3]:");
-  Serial.println(data[4] * offset[2]);
-  Serial.print("data[4]:");
-  Serial.println(data[6] * offset[3]);
-  Serial.print("data[5]:");
-  Serial.println(data[8] * offset[4]);
-  Serial.print("data[6]:");
-  Serial.println(data[10] * offset[5]);
-  Serial.print("data[7]:");
-  Serial.println(data[12] * offset[6]);
-  Serial.print("data[8]:");
-  Serial.println(data[14] * offset[7]);
-  //delay(500);
-    //Serial.println("fuck");
-   
-  //delay(500);
-  */
     sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
-<<<<<<< HEAD
-  sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
-  WA = (sumvalueweight) / (sumvalue);
-  rightMost = (data[14] * offset[7]);
-leftMost = (data[0] * offset[1]);
-Serial.println(WA);
-
-=======
     sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
     WA = (sumvalueweight) / (sumvalue);
     rightMost = (data[14] * offset[7]);
     leftMost = (data[0] * offset[1]);
-    Serial.println(WA);
->>>>>>> 3a4627b2fe8cc795c2a71b00f3fdab44ded4c92b
   }
 
 
@@ -379,6 +389,38 @@ Serial.println(WA);
 
 void cal() {
   steps++;
-
-
+  if (steps >= 10000) {
+    steps = 0;
+  }
 }
+
+void checkADS() {
+  while (1) {
+    line_follow(reverse);
+    input0 = k / analogRead(ADS0);
+    delay(500);
+    //input1 = k / analogRead(ADS1);
+    //input0 = digitalRead(ADS0);
+    //input1 = digitalRead(ADS1);
+    Serial.println(input0);
+    Serial.print("  ");
+    //Serial.println(input1);
+    /*
+    if (input0 <= distance) {
+      Serial.println("first");
+      motorLeft(35, forward);
+      motorRight(35, forward);
+      while (1) {
+        if (input1 <= distance) {
+          motorStop();
+          Serial.println("Second");
+          while(1);
+        }
+      }
+      
+    }
+    */
+  }
+}
+
+
