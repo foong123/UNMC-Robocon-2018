@@ -84,15 +84,7 @@ long output;
 //debugLine
 
 // I2C
-int led1 = 9;       // green jumper wire // i2c  // Orange LED
-
-//StartZone
-int led2 = 28;      // Startzone  // Red LED
-int led3 = 30;      // Turn90     // Red LED
-
-//TZ1
-
-int led4 = 32;      // TZ1 Left Cross   // Green LED
+// TZ1 Left Cross   // Green LED
 int led5 = 34;      // Allignment TZ1   // Green LED
 int led6 = 36;      // Reverse TZ1 // Green LED
 int led7 = 38;      // Check Manual bot // Green LED
@@ -108,7 +100,10 @@ int led12 = 47;     // Check Manual Bot // Blue LED
 int led13 = 24;      // TZ3 go forward + allignment // RED LED
 int led14 = 25;      // TZ3 reverse // RED LED
 int led15 = 26;      // Check Manual Bot// RED LED
-
+int led1 = 2;
+int led2 = 3;
+int led3 = 4;
+int led4 = 5;
 //Flags
 int ignore_flag = 0;
 int launch_flag = 0;
@@ -138,17 +133,7 @@ void setup() {
   pinMode(led2, OUTPUT);
   pinMode(led3, OUTPUT);
   pinMode(led4, OUTPUT);
-  pinMode(led5, OUTPUT);
-  pinMode(led6, OUTPUT);
-  pinMode(led7, OUTPUT);
-  pinMode(led8, OUTPUT);
-  pinMode(led9, OUTPUT);
-  pinMode(led10, OUTPUT);
-  pinMode(led11, OUTPUT);
-  pinMode(led12, OUTPUT);
-  pinMode(led13, OUTPUT);
-  pinMode(led14, OUTPUT);
-  pinMode(led15, OUTPUT);
+  
 }
 
 void loop() {
@@ -211,23 +196,27 @@ void line_follow(int dir) {
           break;
         }
       }
-      if(n > 10 ){
-        int index = n - 10;
-        digitalWrite(dir1,dir);
-         digitalWrite(dir2,dir);
-        analogWrite(en2,normal_speed + index*5);
-        analogWrite(en1,normal_speed );
-        }else if(n < 10){
-          int index = 10 - n;
-          digitalWrite(dir1,dir);
-         digitalWrite(dir2,dir);
-         analogWrite(en2,normal_speed);
-        analogWrite(en1,normal_speed + index*5);
-          }else{
-            digitalWrite(dir1,dir);
-         digitalWrite(dir2,dir);
-         analogWrite(en2,normal_speed );
-        analogWrite(en1,normal_speed );
+      if(n > 15){
+         digitalWrite(led1,LOW);
+            digitalWrite(led2,LOW);
+            digitalWrite(led3,LOW);
+            digitalWrite(led4,HIGH);
+        }
+      if(n > 10 && n < 15 ){
+             digitalWrite(led1,LOW);
+            digitalWrite(led2,LOW);
+            digitalWrite(led3,HIGH);
+            digitalWrite(led4,LOW);
+        }else if(n < 10 && n > 5){
+           digitalWrite(led1,LOW);
+            digitalWrite(led2,HIGH);
+            digitalWrite(led3,LOW);
+            digitalWrite(led4,LOW);
+          }else if(n < 5){
+            digitalWrite(led1,HIGH);
+            digitalWrite(led2,LOW);
+            digitalWrite(led3,LOW);
+            digitalWrite(led4,LOW);
             }
     }
   }
