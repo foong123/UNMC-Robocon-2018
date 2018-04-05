@@ -162,18 +162,19 @@ void loop() {
   }
 
   //StartZone
-  startzone();
+  //startzone();
 
   // TZ1
-  goTZ1();
-  TZ1();
+  //goTZ1();
+  //TZ1();
 
   //TZ2
-  goTZ2();
-  TZ2();
+  //goTZ2();
+  //TZ2();
 
   //TZ3
-  TZ3();
+  //TZ3();
+  line_follow(forward);
 }
 
 void startzone()
@@ -240,7 +241,7 @@ void turnRight90() {
     //Serial.println(right3Most);
 
     //Check condition
-    if (sumvalue> 385 && sumvalue < 405) {
+    if (sumvalue > 385 && sumvalue < 405) {
       digitalWrite(led2, LOW);
       digitalWrite(led3, HIGH);
       //debug line
@@ -430,7 +431,7 @@ void go_reverse() {
   attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
   steps = 0;
   while (1) {
-    read_sunfounder();
+    //    read_sunfounder();
     line_follow(reverse);
     //Serial.println("go straight");
     if (steps >= 1000) {
@@ -580,7 +581,7 @@ void go_reverseTZ2() {
   attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
   steps = 0;
   while (1) {
-    read_sunfounder();
+    //    read_sunfounder();
     line_follow(reverse);
     //Serial.println("go straight");
     if (steps >= 1000) {
@@ -618,7 +619,7 @@ void check_reloadzoneTZ2() {
           check_ultrasonic2();              //if manual bot is there, go TZ2
         }
       }
-       break;
+      break;
     }
   }
 }
@@ -715,7 +716,7 @@ void go_reverseTZ3() {
   attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
   steps = 0;
   while (1) {
-    read_sunfounder();
+    //read_sunfounder();
     line_follow(reverse);
     //Serial.println("go straight");
     if (steps >= 2000) {
@@ -772,97 +773,99 @@ long pid(float lineDist)
 }
 
 void line_follow(int dir) {
-  read_sunfounder();
-  if (WA >= 1.5) {
-    speedl = normal_speed;
-    speedr = normal_speed - 10;
-    if (WA >= 2.5) {
-      speedl += 17.5;
-      if (WA >= 3.0) {
-        speedl += 10;
-        if (data[0]*offset[0] >= 70.0) {
-          speedl += 15;
-          speedr = 25;
+  char code [20] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'};
+  int n = 0;
+  while (1) {
+    if (Serial.available()) {
+      char input_data  = Serial.read();
+      for (int i  = 0; i < 20 ; i++) {
+        if (code[i] == input_data) {
+          n = i;
+          break;
         }
       }
-    }
-  } else if (WA <= 0.5) {
-    speedl = normal_speed - 10;
-    speedr = normal_speed;
-    if (WA <= -0.5) {
-      speedr += 17.5;
-      if (WA <= -1.0) {
-        speedr += 20;
-        if (data[14]*offset[7] >= 70.0) {
-          speedr += 15;
-          speedl = 25;
-        }
+      if (n > 10 ) {
+        int index = n - 10;
+        digitalWrite(dir2, dir);
+        analogWrite(en2, index * 10);
+        digitalWrite(dir1, dir);
+        analogWrite(en1, 70);
+      } else if (n < 10) {
+        int index = n;
+        digitalWrite(dir1, dir);
+        analogWrite(en1, index * 10);
+        digitalWrite(dir2, dir);
+        analogWrite(en2, 70);
+      }
+      else if (n == 10) {
+        digitalWrite(dir2, dir);
+        analogWrite(en2, 70);
+        digitalWrite(dir1, dir);
+        analogWrite(en1, 70);
+
       }
     }
-  } else {
-    speedr = normal_speed;
-    speedl = normal_speed;
   }
-  motorLeft(speedl, dir);
-  motorRight(speedr, dir);
+
+
 }
 
-float weightedAverage() {
-  //Serial.println("bbbbb");
-  read_sunfounder();
-  /*
-    Serial.print("data[1]:");
-    Serial.println(data[0] * offset[0]);
-    Serial.print("data[2]:");
-    Serial.println(data[2] * offset[1]);
-    Serial.print("data[3]:");
-    Serial.println(data[4] * offset[2]);
-    Serial.print("data[4]:");
-    Serial.println(data[6] * offset[3]);
-    Serial.print("data[5]:");
-    Serial.println(data[8] * offset[4]);
-    Serial.print("data[6]:");
-    Serial.println(data[10] * offset[5]);
-    Serial.print("data[7]:");
-    Serial.println(data[12] * offset[6]);
-    Serial.print("data[8]:");
-    Serial.println(data[14] * offset[7]);
-    //delay(500);
-  */
-  sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
-  sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
-  d = (sumvalueweight) / (sumvalue);
-  rightMost = (data[14] * offset[7]);
-  leftMost = (data[0] * offset[1]);
-  right3Most = (data[12] * offset[6]);
-  right2Most = (data[10] * offset[5]);
-  //Serial.print("sumvalue ==   ");
-  //Serial.println(sumvalue);
+//  float weightedAverage() {
+//    Serial.println("bbbbb");
+//    read_sunfounder();
+/*
+  Serial.print("data[1]:");
+  Serial.println(data[0] * offset[0]);
+  Serial.print("data[2]:");
+  Serial.println(data[2] * offset[1]);
+  Serial.print("data[3]:");
+  Serial.println(data[4] * offset[2]);
+  Serial.print("data[4]:");
+  Serial.println(data[6] * offset[3]);
+  Serial.print("data[5]:");
+  Serial.println(data[8] * offset[4]);
+  Serial.print("data[6]:");
+  Serial.println(data[10] * offset[5]);
+  Serial.print("data[7]:");
+  Serial.println(data[12] * offset[6]);
+  Serial.print("data[8]:");
+  Serial.println(data[14] * offset[7]);
   //delay(500);
-  return d ;
-}
+*/
+//    sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
+//    sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
+//    d = (sumvalueweight) / (sumvalue);
+//    rightMost = (data[14] * offset[7]);
+//    leftMost = (data[0] * offset[1]);
+//    right3Most = (data[12] * offset[6]);
+//    right2Most = (data[10] * offset[5]);
+//    Serial.print("sumvalue ==   ");
+//    Serial.println(sumvalue);
+//    delay(500);
+//    return d ;
+//  }
 
-void read_sunfounder() {
-  Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
-  while (Wire.available())
-  { digitalWrite(led1, HIGH);
-    data[t] = Wire.read();
-    if (t < 15) {
-      t++;
-    }
-    else {
-      t = 0;
-    }
-    sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
-    sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
-    //Serial.println(sumvalue);
-    WA = (sumvalueweight) / (sumvalue);
-    rightMost = (data[0] * offset[1]);
-    leftMost = (data[14] * offset[7]);
-    right3Most = (data[4] * offset[2]);
-    right2Most = (data[2] * offset[1]);
-  }
-}
+//  void read_sunfounder() {
+//    Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
+//    while (Wire.available())
+//    { digitalWrite(led1, HIGH);
+//      data[t] = Wire.read();
+//      if (t < 15) {
+//        t++;
+//      }
+//      else {
+//        t = 0;
+//      }
+//      sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
+//      sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
+//      //Serial.println(sumvalue);
+//      WA = (sumvalueweight) / (sumvalue);
+//      rightMost = (data[0] * offset[1]);
+//      leftMost = (data[14] * offset[7]);
+//      right3Most = (data[4] * offset[2]);
+//      right2Most = (data[2] * offset[1]);
+//    }
+// }
 
 void cal() {
   steps++;
