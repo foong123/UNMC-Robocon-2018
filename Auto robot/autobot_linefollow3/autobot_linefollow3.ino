@@ -1,5 +1,3 @@
-#include <Wire.h>
-#include <NewPing.h>
 #define uchar unsigned char
 #define forward 0
 #define reverse 1
@@ -21,24 +19,6 @@ int multiply3;
 int leftspeed;
 int rightspeed;
 
-// Sunfounder_Variables
-uchar t;
-uchar data[16];
-float sumvalueweight;
-float sumvalue;
-float WA;
-float d;
-float rightMost;
-float right2Most;
-float right3Most;
-float right4Most;
-float leftMost;
-float left2Most;
-float left3Most;
-float left4Most;
-float offset[8] = {1, 0.93, 0.98, 0.86, 0.76, 0.91, 0.89, 0.96};
-int cross_value = 600;
-
 //Motor_driver_Pin
 int en2 = 5; //red jumper wire // right
 int dir2 = 7; //white jumper wire
@@ -58,40 +38,10 @@ int steps_90 = 355;         //Turn 90
 int steps_cross = 330;
 int speedl = 0;
 int speedr = 0;
-int normal_speed = 70;
+int normal_speed = 30;
 volatile int steps = 0;     //Encoder starting values
 float leftMotorSpeed = 0;  // Initialise Speed variables
 float rightMotorSpeed = 0;
-
-
-//IR_Pin
-int IR_left = 10; //blue jumper wire
-int IR_right = 11; //blue jumper wire
-
-//IR_Variables
-int left_IR = 0;
-int right_IR = 0;
-
-// Ultrasonic_Pin
-int trig1 = 13; //blue jumper wire (front)
-int echo1 = 12; //green jumper wire(front)
-int trig2 = 49; //yellow jumper wire(back)
-int echo2 = 48; //red jumper wire(back)
-
-//Ultrasonic_Variables
-int max_dist = 30;
-double sonar1 = 0;
-double sonar2 = 0;
-double manual_dist = 23.0;
-NewPing ultrasonic1(trig1, echo1, max_dist); // NewPing setup of pins and maximum distance.
-NewPing ultrasonic2(trig2, echo2, max_dist); // NewPing setup of pins and maximum distance.
-
-//for pid
-float Kp = 30.0;
-float Ki = 0.0;
-float Kd = 0;
-float error, errorSum, errorOld;
-long output;
 
 //debugLine
 
@@ -121,6 +71,11 @@ int led13 = 24;      // TZ3 go forward + allignment // RED LED
 int led14 = 25;      // TZ3 reverse // RED LED
 int led15 = 26;      // Check Manual Bot// RED LED
 
+// camera
+
+int led16 = 51;
+int led17 = 53;
+
 //Flags
 int ignore_flag = 0;
 int launch_flag = 0;
@@ -132,15 +87,9 @@ int stop_flag = 0;
 int magic_number  = 40;
 
 void setup() {
-  Wire.begin();
   Serial.begin(115200);
-  error = 0;    // Initialise error variables
-  errorSum = 0;
-  errorOld = 0;
   //PinMode setup
   pinMode(encoder1, INPUT_PULLUP);
-  pinMode(IR_left, INPUT);
-  pinMode(IR_right, INPUT);
   //attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
   pinMode(en2, OUTPUT);
   pinMode(en1, OUTPUT);
@@ -161,6 +110,8 @@ void setup() {
   pinMode(led13, OUTPUT);
   pinMode(led14, OUTPUT);
   pinMode(led15, OUTPUT);
+  pinMode(led16, OUTPUT);
+  pinMode(led17, OUTPUT);     // Yellow LED
 
   //for line follow
   pinMode(leftright, INPUT);
@@ -170,16 +121,8 @@ void setup() {
 }
 
 void loop() {
-
-
   line_follow(forward);
-
-
-
-
 }
-
-
 
 
 void motorLeft(float speed_pwm, int dir) {
@@ -201,93 +144,58 @@ void motorStop() {
   //delay(25);
 }
 
-long pid(float lineDist)
-{
-  errorOld = error;        // Save the old error for differential component
-  error = lineDist;  // Calculate the error in position
-  errorSum += error;
-  //Serial.println(error);
-  //delay(500);
-  float proportional = error * Kp;  // Calculate the components of the PID
-  /*
-    float integral = errorSum * Ki;
-    float differential = (error - errorOld) * Kd;
-    long output = proportional + integral + differential;  // Calculate the result
-  */
-  return output;
-}
-/*
-  void line_follow(int dir) {
-  char code [20] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't'};
-  int n = 0;
-  while (1) {
-    if (Serial.available()) {
-      char input_data  = Serial.read();
-      for (int i  = 0; i < 20 ; i++) {
-        if (code[i] == input_data) {
-          n = i;
-          break;
-        }
-      }
-      if(n > 10 ){
-        int index = n - 10;
-        digitalWrite(dir1,dir);
-         digitalWrite(dir2,dir);
-        analogWrite(en2,normal_speed + index*5);
-        analogWrite(en1,normal_speed );
-        }else if(n < 10){
-          int index = 10 - n;
-          digitalWrite(dir1,dir);
-         digitalWrite(dir2,dir);
-         analogWrite(en2,normal_speed);
-        analogWrite(en1,normal_speed + index*5);
-          }else{
-            digitalWrite(dir1,dir);
-         digitalWrite(dir2,dir);
-         analogWrite(en2,normal_speed );
-        analogWrite(en1,normal_speed );
-            }
-    }
-  }
-  }
-*/
-
-
 void line_follow(int dir) {
   //dir2 is right, 1 is backward
-
+  Serial.println("kk");
+  digitalWrite(led16,HIGH);
+  digitalWrite(led17,HIGH);
   while (1) {
     WA_direction = digitalRead(leftright);
     multiply1 = digitalRead(power1);
     multiply2 = digitalRead(power2);
     multiply3 = digitalRead(power3);
-    rightspeed = normal_speed;
-    leftspeed = normal_speed;
 
-    if (WA_direction == 1) { //go right
-      if (multiply1 == 1) {
-        rightspeed = rightspeed + 20
-        if (multiply2 == 1) {
-          rightspeed = rightspeed + 20
-          if (multiply3 == 1) {
-            rightspeed = rightspeed + 20
-          }
-        }
+    if (WA_direction == HIGH) { //go right
+      if (multiply1 == HIGH) {
+        digitalWrite(led10, LOW);
+        digitalWrite(led1, HIGH);
+        rightspeed = 50;
+        leftspeed = normal_speed;
+      }
+      if (multiply2 == HIGH) {
+        digitalWrite(led1, LOW);
+        digitalWrite(led5, HIGH);
+        rightspeed = 60;
+        leftspeed = normal_speed;
+      }
+      if (multiply3 == HIGH) {
+        digitalWrite(led5, LOW);
+        digitalWrite(led8, HIGH);
+        rightspeed = 70;
+        leftspeed = normal_speed;
       }
     }
 
-    if (WA_direction == 0) { //go left
-      if (multiply1 == 1) {
-        leftspeed = leftspeed + 20
-        if (multiply2 == 1) {
-          leftspeed = leftspeed + 20
-          if (multiply3 == 1) {
-            leftspeed = leftspeed + 20
-          }
-        }
+    if (WA_direction == LOW) { //go left
+      if (multiply1 == HIGH) {
+        digitalWrite(led8, LOW);
+        digitalWrite(led13, HIGH);
+        leftspeed = 50;
+        rightspeed = normal_speed;
+      }
+      if (multiply2 == HIGH) {
+        digitalWrite(led13, LOW);
+        digitalWrite(led15, HIGH);
+        leftspeed = 60;
+        rightspeed = normal_speed;
+      }
+      if (multiply3 == HIGH) {
+        digitalWrite(led15, LOW);
+        digitalWrite(led10, HIGH);
+        leftspeed = 70;
+        rightspeed = normal_speed;
       }
     }
-
     digitalWrite(dir1, dir);
     digitalWrite(dir2, dir);
     analogWrite(en2, rightspeed);

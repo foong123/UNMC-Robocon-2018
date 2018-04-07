@@ -80,7 +80,7 @@ long output;
 //debugLine
 
 // I2C
-int led1 = 9;       // green jumper wire // i2c  // Orange LED
+int led1 = 31 ;       // green jumper wire // i2c  // Orange LED
 
 //StartZone
 int led2 = 28;      // Startzone  // Red LED
@@ -101,13 +101,13 @@ int led11 = 45;      // Reverse TZ2 // Blue LED
 int led12 = 47;     // Check Manual Bot // Blue LED
 
 // TZ3
-int led13 = 24;      // TZ3 go forward + allignment // RED LED
-int led14 = 25;      // TZ3 reverse // RED LED
-int led15 = 26;      // Check Manual Bot// RED LED
+int led13 = 49;      // TZ3 go forward + allignment // RED LED
+int led14 = 51;      // TZ3 reverse // RED LED
+int led15 = 26;      // Check Manual Bot// RED LED  // unavailable
 
 //Ultrasonic
-int led16 = 42;
-int led17 = 44;
+int led16 = 42;      //   WHITE LED
+int led17 = 44;      // WHITE LED
 
 //Flags
 int ignore_flag = 0;
@@ -773,47 +773,46 @@ long pid(float lineDist)
 }
 
 void line_follow(int dir) {
-  char code [20] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'};
-  int n = 0;
-  while (1) {
-    if (Serial.available()) {
-      char input_data  = Serial.read();
-      for (int i  = 0; i < 20 ; i++) {
-        if (code[i] == input_data) {
-          n = i;
-          break;
+  read_sunfounder();
+  if (WA >= 1.5) {
+    speedl = normal_speed;
+    speedr = normal_speed - 10;
+    if (WA >= 2.5) {
+      speedl += 17.5;
+      if (WA >= 3.0) {
+        speedl += 10;
+        if (data[0]*offset[0] >= 70.0) {
+          speedl += 15;
+          speedr = 25;
         }
       }
-      if (n > 10 ) {
-        int index = n - 10;
-        digitalWrite(dir2, dir);
-        analogWrite(en2, index * 10);
-        digitalWrite(dir1, dir);
-        analogWrite(en1, 70);
-      } else if (n < 10) {
-        int index = n;
-        digitalWrite(dir1, dir);
-        analogWrite(en1, index * 10);
-        digitalWrite(dir2, dir);
-        analogWrite(en2, 70);
-      }
-      else if (n == 10) {
-        digitalWrite(dir2, dir);
-        analogWrite(en2, 70);
-        digitalWrite(dir1, dir);
-        analogWrite(en1, 70);
-
+    }
+  } else if (WA <= 0.5) {
+    speedl = normal_speed - 10;
+    speedr = normal_speed;
+    if (WA <= -0.5) {
+      speedr += 17.5;
+      if (WA <= -1.0) {
+        speedr += 20;
+        if (data[14]*offset[7] >= 70.0) {
+          speedr += 15;
+          speedl = 25;
+        }
       }
     }
+  } else {
+    speedr = normal_speed;
+    speedl = normal_speed;
   }
-
-
+  motorLeft(speedl, dir);
+  motorRight(speedr, dir);
 }
 
-//  float weightedAverage() {
-//    Serial.println("bbbbb");
-//    read_sunfounder();
-/*
+
+float weightedAverage() {
+  //   Serial.println("bbbbb");
+  read_sunfounder();
+
   Serial.print("data[1]:");
   Serial.println(data[0] * offset[0]);
   Serial.print("data[2]:");
@@ -831,41 +830,40 @@ void line_follow(int dir) {
   Serial.print("data[8]:");
   Serial.println(data[14] * offset[7]);
   //delay(500);
-*/
-//    sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
-//    sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
-//    d = (sumvalueweight) / (sumvalue);
-//    rightMost = (data[14] * offset[7]);
-//    leftMost = (data[0] * offset[1]);
-//    right3Most = (data[12] * offset[6]);
-//    right2Most = (data[10] * offset[5]);
-//    Serial.print("sumvalue ==   ");
-//    Serial.println(sumvalue);
-//    delay(500);
-//    return d ;
-//  }
+  sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
+  sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
+  d = (sumvalueweight) / (sumvalue);
+  rightMost = (data[14] * offset[7]);
+  leftMost = (data[0] * offset[1]);
+  right3Most = (data[12] * offset[6]);
+  right2Most = (data[10] * offset[5]);
+  //Serial.print("sumvalue ==   ");
+  //Serial.println(sumvalue);
+  //delay(500);
+  return d ;
+}
 
-//  void read_sunfounder() {
-//    Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
-//    while (Wire.available())
-//    { digitalWrite(led1, HIGH);
-//      data[t] = Wire.read();
-//      if (t < 15) {
-//        t++;
-//      }
-//      else {
-//        t = 0;
-//      }
-//      sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
-//      sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
-//      //Serial.println(sumvalue);
-//      WA = (sumvalueweight) / (sumvalue);
-//      rightMost = (data[0] * offset[1]);
-//      leftMost = (data[14] * offset[7]);
-//      right3Most = (data[4] * offset[2]);
-//      right2Most = (data[2] * offset[1]);
-//    }
-// }
+void read_sunfounder() {
+  Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
+  while (Wire.available())
+  { digitalWrite(led1, HIGH);
+    data[t] = Wire.read();
+    if (t < 15) {
+      t++;
+    }
+    else {
+      t = 0;
+    }
+    sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
+    sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
+    //Serial.println(sumvalue);
+    WA = (sumvalueweight) / (sumvalue);
+    rightMost = (data[0] * offset[1]);
+    leftMost = (data[14] * offset[7]);
+    right3Most = (data[4] * offset[2]);
+    right2Most = (data[2] * offset[1]);
+  }
+}
 
 void cal() {
   steps++;
