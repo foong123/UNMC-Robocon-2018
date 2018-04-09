@@ -1,11 +1,10 @@
 import cv2
 import numpy as np
 import imutils
-import time
 
 error = 100
-lower = np.array([220,220,220])
-upper = np.array([255,255,255])
+lower = np.array([0,0,135])
+upper = np.array([180,62,255])
 
 cap = cv2.VideoCapture(0)
 
@@ -13,6 +12,7 @@ while True:
     ret,frame = cap.read()
     centerX = frame.shape[1]/2
     bgr = cv2.inRange(frame,lower,upper)
+    hsv = cv2.cvtColor(frame,cv2,COLOR_BRG2HSV)
     
     #cv2.imshow('bgr',bgr)
     

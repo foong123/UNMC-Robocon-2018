@@ -45,8 +45,7 @@ float rightMotorSpeed = 0;
 
 //debugLine
 
-// I2C
-int led1 = 9;       // green jumper wire // i2c  // Orange LED
+int led1 = 31 ;       // green jumper wire // i2c  // Orange LED
 
 //StartZone
 int led2 = 28;      // Startzone  // Red LED
@@ -67,14 +66,12 @@ int led11 = 45;      // Reverse TZ2 // Blue LED
 int led12 = 47;     // Check Manual Bot // Blue LED
 
 // TZ3
-int led13 = 24;      // TZ3 go forward + allignment // RED LED
-int led14 = 25;      // TZ3 reverse // RED LED
-int led15 = 26;      // Check Manual Bot// RED LED
+int led13 = 49;      // TZ3 go forward + allignment // RED LED
+int led14 = 51;      // TZ3 reverse // RED LED
 
-// camera
-
-int led16 = 51;
-int led17 = 53;
+//Ultrasonic
+int led16 = 42;      //   WHITE LED
+int led17 = 44;      // WHITE LED
 
 //Flags
 int ignore_flag = 0;
@@ -109,7 +106,6 @@ void setup() {
   pinMode(led12, OUTPUT);
   pinMode(led13, OUTPUT);
   pinMode(led14, OUTPUT);
-  pinMode(led15, OUTPUT);
   pinMode(led16, OUTPUT);
   pinMode(led17, OUTPUT);     // Yellow LED
 
@@ -146,9 +142,8 @@ void motorStop() {
 
 void line_follow(int dir) {
   //dir2 is right, 1 is backward
-  Serial.println("kk");
   digitalWrite(led16,HIGH);
-  digitalWrite(led17,HIGH);
+  digitalWrite( led17,HIGH);
   while (1) {
     WA_direction = digitalRead(leftright);
     multiply1 = digitalRead(power1);
@@ -157,7 +152,7 @@ void line_follow(int dir) {
 
     if (WA_direction == HIGH) { //go right
       if (multiply1 == HIGH) {
-        digitalWrite(led10, LOW);
+        digitalWrite(led13, LOW);
         digitalWrite(led1, HIGH);
         rightspeed = 50;
         leftspeed = normal_speed;

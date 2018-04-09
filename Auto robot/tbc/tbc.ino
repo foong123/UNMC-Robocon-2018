@@ -49,8 +49,8 @@ float rightMotorSpeed = 0;
 
 
 //IR_Pin
-int IR_left = 10; //blue jumper wire
-int IR_right = 11; //blue jumper wire
+int IR_left = 11; //blue jumper wire
+int IR_right = 10; //blue jumper wire
 
 //IR_Variables
 int left_IR = 0;
@@ -103,7 +103,6 @@ int led12 = 47;     // Check Manual Bot // Blue LED
 // TZ3
 int led13 = 49;      // TZ3 go forward + allignment // RED LED
 int led14 = 51;      // TZ3 reverse // RED LED
-int led15 = 26;      // Check Manual Bot// RED LED  // unavailable
 
 //Ultrasonic
 int led16 = 42;      //   WHITE LED
@@ -148,7 +147,6 @@ void setup() {
   pinMode(led12, OUTPUT);
   pinMode(led13, OUTPUT);
   pinMode(led14, OUTPUT);
-  pinMode(led15, OUTPUT);
   pinMode(led16, OUTPUT);
   pinMode(led17, OUTPUT);
 }
@@ -727,11 +725,11 @@ void go_reverseTZ3() {
 }
 
 void check_reloadzoneTZ3() {
-  digitalWrite(led15, HIGH);
+  digitalWrite(led2, HIGH);
   while (1) {
     line_follow(reverse);
     if (sumvalue >= cross_value) {
-      digitalWrite(led15, LOW);
+      digitalWrite(led2, LOW);
       motorStop();
       delay(2000);
       break;
