@@ -72,16 +72,13 @@ void motorstart(int dir){
     }else if (dir == 0){
       analogWrite(motorA , 0);
       analogWrite(motorB , 50);
-      
       }
-  
   }
 
  void motorstop(){
   analogWrite(motorA , 0);
   analogWrite(motorB , 0);
   Serial.println("Motor stopped");
-  
   }
 void cal(){
   steps ++;
@@ -95,6 +92,4 @@ void cal(){
    }
    * 
    */
-  
-  
   }
