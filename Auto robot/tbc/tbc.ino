@@ -19,8 +19,8 @@ float rightMost;
 float leftMost;
 float right2Most;
 float right3Most;
-float offset[8] = {1, 0.92, 0.91, 0.77, 0.69, 0.76, 0.72, 0.79};
-int cross_value = 600;
+float offset[8] = {1, 0.99, 1.04, 0.89, 0.77, 0.86, 0.83, 0.89};
+int cross_value = 570;
 int value90 = 360;
 
 //Motor_driver_Pin
@@ -46,6 +46,9 @@ int normal_speed = 70;
 volatile int steps = 0;     //Encoder starting values
 float leftMotorSpeed = 0;  // Initialise Speed variables
 float rightMotorSpeed = 0;
+float multipier = 1.5;
+float multipier_launch = (7/5);
+float multipier_slow = 1.0;
 
 
 //IR_Pin
@@ -80,7 +83,7 @@ long output;
 //debugLine
 
 // I2C
-int led1 = 31 ;       // green jumper wire // i2c  // Orange LED
+int led1 = 53 ;       // green jumper wire // i2c  // Orange LED
 
 //StartZone
 int led2 = 28;      // Startzone  // Red LED
@@ -120,6 +123,7 @@ int magic_number  = 40;
 
 void setup() {
   Wire.begin();
+  Wire.setTimeout(100);
   Serial.begin(115200);
   error = 0;    // Initialise error variables
   errorSum = 0;
@@ -172,9 +176,13 @@ void loop() {
 
   //TZ3
   //TZ3();
-  line_follow(forward);
+  line_follow_reverse();
   //read_sunfounder();
-  Serial.println("fuck1");
+  //Serial.println(WA);
+  //Serial.println("asdad");
+  //go_launchzone();               //Allignment of launching zone
+  //go_reverse();
+  
 }
 
 void startzone()
@@ -241,7 +249,7 @@ void turnRight90() {
     //Serial.println(right3Most);
 
     //Check condition
-    if (sumvalue > 385 && sumvalue < 405) {
+    if (sumvalue > 530 && sumvalue < 570) {
       digitalWrite(led2, LOW);
       digitalWrite(led3, HIGH);
       //debug line
@@ -378,7 +386,7 @@ void go_straightTZ1() {
 void go_launchzone() {
   digitalWrite(led5, HIGH);
   while (1) {
-    line_follow(forward);
+    line_follow_launch(forward);
     read_IR();
     //Serial.println(left_IR);
     //Serial.println(right_IR);
@@ -434,7 +442,7 @@ void go_reverse() {
     //    read_sunfounder();
     line_follow(reverse);
     //Serial.println("go straight");
-    if (steps >= 1000) {
+    if (steps >= 300) {
       digitalWrite(led6, LOW);
       break;
     }
@@ -774,39 +782,110 @@ long pid(float lineDist)
 
 void line_follow(int dir) {
   read_sunfounder();
-  Serial.println("fuck2");
-  if (WA >= 1.5) {
-    speedl = normal_speed;
-    speedr = normal_speed - 10;
-    if (WA >= 2.5) {
-      speedl += 17.5;
-      if (WA >= 3.0) {
-        speedl += 10;
+  if (WA >= 3.3) {
+    speedl = (normal_speed * multipier);
+    speedr = (normal_speed * multipier) - (10* multipier);
+    if (WA >= 4) {
+      speedl += (17.5 * multipier);
+      if (WA >= 4.9) {
+        speedl += (10* multipier);
         if (data[0]*offset[0] >= 70.0) {
-          speedl += 15;
-          speedr = 25;
+          speedl += (15* multipier);
+          speedr = (25* multipier);
         }
       }
     }
-  } else if (WA <= 0.5) {
-    speedl = normal_speed - 10;
-    speedr = normal_speed;
-    if (WA <= -0.5) {
-      speedr += 17.5;
-      if (WA <= -1.0) {
-        speedr += 20;
+  } else if (WA <= 2.2) {
+    speedl = (normal_speed * multipier)- (10* multipier);
+    speedr = (normal_speed* multipier);
+    if (WA <= 1.3) {
+      speedr += (17.5* multipier);
+      if (WA <= -0.5) {
+        speedr += (20* multipier);
         if (data[14]*offset[7] >= 70.0) {
-          speedr += 15;
-          speedl = 25;
+          speedr += (15* multipier);
+          speedl = (25* multipier);
         }
       }
     }
   } else {
-    speedr = normal_speed;
-    speedl = normal_speed;
+    speedr = (normal_speed* multipier);
+    speedl = (normal_speed* multipier);
   }
   motorLeft(speedl, dir);
   motorRight(speedr, dir);
+}
+
+void line_follow_launch(int dir) {
+  read_sunfounder();
+  if (WA >= 3.3) {
+    speedl = (normal_speed * multipier_launch);
+    speedr = (normal_speed * multipier_launch) - (10* multipier_launch);
+    if (WA >= 4) {
+      speedl += (17.5 * multipier_launch);
+      if (WA >= 4.9) {
+        speedl += (10* multipier_launch);
+        if (data[0]*offset[0] >= 70.0) {
+          speedl += (15* multipier_launch);
+          speedr = (25* multipier_launch);
+        }
+      }
+    }
+  } else if (WA <= 2.2) {
+    speedl = (normal_speed * multipier_launch)- (10* multipier_launch);
+    speedr = (normal_speed* multipier_launch);
+    if (WA <= 1.3) {
+      speedr += (17.5* multipier_launch);
+      if (WA <= -0.5) {
+        speedr += (20* multipier_launch);
+        if (data[14]*offset[7] >= 70.0) {
+          speedr += (15* multipier_launch);
+          speedl = (25* multipier_launch);
+        }
+      }
+    }
+  } else {
+    speedr = (normal_speed* multipier_launch);
+    speedl = (normal_speed* multipier_launch);
+  }
+  motorLeft(speedl, dir);
+  motorRight(speedr, dir);
+}
+
+void line_follow_reverse() {
+  read_sunfounder();
+  if (WA >= 3.3) {
+    speedl = (normal_speed * multipier_slow);
+    speedr = (normal_speed * multipier_slow) - (10* multipier_slow);
+    if (WA >= 4) {
+      speedl += (19 * multipier_slow);
+      if (WA >= 4.9) {
+        speedl += (21* multipier_slow);
+        if (data[0]*offset[0] >= 70.0) {
+          speedl += (15* multipier_slow);
+          speedr = (25* multipier_slow);
+        }
+      }
+    }
+  } else if (WA <= 2.2) {
+    speedl = (normal_speed * multipier_slow)- (10* multipier_slow);
+    speedr = (normal_speed* multipier_slow);
+    if (WA <= 1.3) {
+      speedr += (19* multipier_slow);
+      if (WA <= -0.5) {
+        speedr += (21* multipier_slow);
+        if (data[14]*offset[7] >= 70.0) {
+          speedr += (15* multipier_slow);
+          speedl = (25* multipier_slow);
+        }
+      }
+    }
+  } else {
+    speedr = (normal_speed* multipier_slow);
+    speedl = (normal_speed* multipier_slow);
+  }
+  motorLeft(speedl, reverse);
+  motorRight(speedr, reverse);
 }
 
 
@@ -859,7 +938,7 @@ void read_sunfounder() {
     sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
     //Serial.println(sumvalue);
     WA = (sumvalueweight) / (sumvalue);
-    Serial.println(WA);
+    //Serial.println(WA);
     rightMost = (data[0] * offset[1]);
     leftMost = (data[14] * offset[7]);
     right3Most = (data[4] * offset[2]);
