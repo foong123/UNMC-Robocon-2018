@@ -40,7 +40,7 @@ int steps_90 = 355;         //Turn 90
 int steps_cross = 330;
 int speedl = 0;
 int speedr = 0;
-int normal_speed = 30;
+int normal_speed = 50;
 volatile int steps = 0;     //Encoder starting values
 float leftMotorSpeed = 0;  // Initialise Speed variables
 float rightMotorSpeed = 0;
@@ -88,6 +88,7 @@ int magic_number  = 40;
 void setup() {
   Serial.begin(115200);
   //PinMode setup
+  Serial.setTimeout(10);
   pinMode(encoder1, INPUT_PULLUP);
   //attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
   pinMode(en2, OUTPUT);
@@ -144,66 +145,23 @@ void motorStop() {
 }
 
 void line_follow(int dir) {
-  //dir2 is right, 1 is backward
-  digitalWrite(led16,HIGH);
-  digitalWrite( led17,HIGH);
-  while (1) {
-    WA_direction = digitalRead(leftright);
-    multiply1 = digitalRead(power1);
-    multiply2 = digitalRead(power2);
-    multiply3 = digitalRead(power3);
-    junction_flag = digitalRead(junction);
-    if(junction_flag){
-      analogWrite(en1,0);
-      analogWrite(en2,0);
-       while(1);
-      }
-    if (WA_direction == HIGH) { //go right
-      if (multiply1 == HIGH) {
-        digitalWrite(led13, LOW);
-        digitalWrite(led1, HIGH);
-        rightspeed = 50;
-        leftspeed = normal_speed;
-      }
-      if (multiply2 == HIGH) {
-        digitalWrite(led1, LOW);
-        digitalWrite(led5, HIGH);
-        rightspeed = 60;
-        leftspeed = normal_speed;
-      }
-      if (multiply3 == HIGH) {
-        digitalWrite(led5, LOW);
-        digitalWrite(led8, HIGH);
-        rightspeed = 70;
-        leftspeed = normal_speed;
-      }
+  
+  while(Serial.available()){
+    int data  = Serial.parseInt();
+    if(data >= 0){ //centrod left = -ve
+        leftspeed = normal_speed + data/2;
+        //rightspeed = normal_speed - data/2;
+        rightspeed = 0;
+      }else{
+        rightspeed = normal_speed + data/2;
+        //leftspeed = normal_speed - data/2 ;
+        leftspeed = 0;
+        }
+        digitalWrite(dir1,dir);
+        digitalWrite(dir2,dir);
+        analogWrite(en1,leftspeed);
+        analogWrite(en2,rightspeed);
     }
-
-    if (WA_direction == LOW) { //go left
-      if (multiply1 == HIGH) {
-        digitalWrite(led8, LOW);
-        digitalWrite(led13, HIGH);
-        leftspeed = 50;
-        rightspeed = normal_speed;
-      }
-      if (multiply2 == HIGH) {
-        digitalWrite(led13, LOW);
-        //digitalWrite(led15, HIGH);
-        leftspeed = 60;
-        rightspeed = normal_speed;
-      }
-      if (multiply3 == HIGH) {
-        //digitalWrite(led15, LOW);
-        digitalWrite(led10, HIGH);
-        leftspeed = 70;
-        rightspeed = normal_speed;
-      }
-    }
-    digitalWrite(dir1, dir);
-    digitalWrite(dir2, dir);
-    analogWrite(en2, rightspeed);
-    analogWrite(en1, leftspeed);
-  }
 }
 
 
