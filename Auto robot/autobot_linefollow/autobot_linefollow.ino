@@ -8,6 +8,7 @@
 //sda -- blue jumper wire
 //scl -- orange jumper wire
 
+int input_data = 0;
 // Sunfounder_Variables
 uchar t;
 uchar data[16];
@@ -16,12 +17,15 @@ float sumvalue;
 float WA;
 float d;
 float rightMost;
-float leftMost;
 float right2Most;
 float right3Most;
-float offset[8] = {1, 0.92, 0.91, 0.77, 0.69, 0.76, 0.72, 0.79};
+float right4Most;
+float leftMost;
+float left2Most;
+float left3Most;
+float left4Most;
+float offset[8] = {1, 0.93, 0.98, 0.86, 0.76, 0.91, 0.89, 0.96};
 int cross_value = 600;
-int value90 = 360;
 
 //Motor_driver_Pin
 int en2 = 5; //red jumper wire
@@ -49,8 +53,8 @@ float rightMotorSpeed = 0;
 
 
 //IR_Pin
-int IR_left = 11; //blue jumper wire
-int IR_right = 10; //blue jumper wire
+int IR_left = 10; //blue jumper wire
+int IR_right = 11; //blue jumper wire
 
 //IR_Variables
 int left_IR = 0;
@@ -80,7 +84,7 @@ long output;
 //debugLine
 
 // I2C
-int led1 = 31 ;       // green jumper wire // i2c  // Orange LED
+int led1 = 9;       // green jumper wire // i2c  // Orange LED
 
 //StartZone
 int led2 = 28;      // Startzone  // Red LED
@@ -101,12 +105,9 @@ int led11 = 45;      // Reverse TZ2 // Blue LED
 int led12 = 47;     // Check Manual Bot // Blue LED
 
 // TZ3
-int led13 = 49;      // TZ3 go forward + allignment // RED LED
-int led14 = 51;      // TZ3 reverse // RED LED
-
-//Ultrasonic
-int led16 = 42;      //   WHITE LED
-int led17 = 44;      // WHITE LED
+int led13 = 24;      // TZ3 go forward + allignment // RED LED
+int led14 = 25;      // TZ3 reverse // RED LED
+int led15 = 26;      // Check Manual Bot// RED LED
 
 //Flags
 int ignore_flag = 0;
@@ -147,34 +148,41 @@ void setup() {
   pinMode(led12, OUTPUT);
   pinMode(led13, OUTPUT);
   pinMode(led14, OUTPUT);
-  pinMode(led16, OUTPUT);
-  pinMode(led17, OUTPUT);
+  pinMode(led15, OUTPUT);
 }
 
 void loop() {
-  Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
+  //  Wire.requestFrom(9, 16); //request 16 bytes from slave device #9
   if (Wire.available()) {
     digitalWrite(led1, HIGH);       //Check for i2c
   } else {
     digitalWrite(led1, LOW);
   }
+  digitalWrite(dir1, LOW);
+  digitalWrite(dir2, LOW);
+
+  digitalWrite(dir1,LOW);
+  analogWrite(en1,50);
+  digitalWrite(dir2,LOW);
+  analogWrite(en2,50);
   
-  //StartZone
-  //startzone();
 
-  // TZ1
-  //goTZ1();
-  //TZ1();
 
-  //TZ2
-  //goTZ2();
-  //TZ2();
+  //  //StartZone
+  //  startzone();
+  //
+  //  // TZ1
+  //  goTZ1();
+  //  TZ1();
+  //
+  //  //TZ2
+  //  goTZ2();
+  //  TZ2();
+  //
+  //  //TZ3
+  //  TZ3();
 
-  //TZ3
-  //TZ3();
-  line_follow(forward);
-  //read_sunfounder();
-  Serial.println("fuck1");
+
 }
 
 void startzone()
@@ -193,8 +201,6 @@ void goTZ1()
 
 void TZ1()
 {
-  digitalWrite(led16, LOW);
-  digitalWrite(led17, LOW);
   go_launchzone();               //Allignment of launching zone
   go_reverse();
   check_reloadzone();
@@ -202,7 +208,6 @@ void TZ1()
 
 void goTZ2()
 {
-  go_straight();
   turnRightcrossTZ2();
   turnLeft90TZ2();
   delay(3000);
@@ -211,8 +216,6 @@ void goTZ2()
 
 void TZ2()
 {
-  digitalWrite(led16, LOW);
-  digitalWrite(led17, LOW);
   check_launchzoneTZ2();
   go_reverseTZ2();
   check_reloadzoneTZ2();
@@ -233,7 +236,6 @@ void turnRight90() {
   while (1) {
     line_follow(forward);                 //Line follow in forward direction
     //debug line
-    //Serial.println(sumvalue);
     //Serial.print(rightMost);
     //Serial.print("  ");
     //Serial.print(right2Most);
@@ -241,11 +243,11 @@ void turnRight90() {
     //Serial.println(right3Most);
 
     //Check condition
-    if (sumvalue > 385 && sumvalue < 405) {
+    if (rightMost >= 55 && right2Most >= 61 && right3Most >= 65) {
       digitalWrite(led2, LOW);
       digitalWrite(led3, HIGH);
       //debug line
-      //Serial.print("I see a right turn");
+      Serial.print("I see a right turn");
       smallreverse();         //Re-adjust the robot for perfect turning
       turnRightcross();       //Turn right by 90
       digitalWrite(led3, LOW);
@@ -307,6 +309,7 @@ void go_straight() {
   }
 }
 
+
 void turnLeft90() {
   digitalWrite(led4, HIGH);
   while (1) {
@@ -348,6 +351,7 @@ void turnLeftcross() {
   analogWrite(en1, 75);
   TurnCross();
 }
+
 
 void TurnCross() {
   //debug line
@@ -431,7 +435,7 @@ void go_reverse() {
   attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
   steps = 0;
   while (1) {
-    //    read_sunfounder();
+    read_sunfounder();
     line_follow(reverse);
     //Serial.println("go straight");
     if (steps >= 1000) {
@@ -458,12 +462,7 @@ void check_reloadzone() {
         {
           close_flag = 0;
           break;
-        }
-        else if (close_flag == 3)
-        {
-          close_flag = 0;
-          TZ1();
-          break;
+
         }
         else {
           check_ultrasonic2();              //if manual bot is there, go TZ1
@@ -482,7 +481,6 @@ void check_ultrasonic1() {
   if (sonar1 <= manual_dist && sonar1 > 1) {
     //Serial.println("lst detected");
     close_flag = 1;
-    digitalWrite(led16, HIGH);
   }
   else
   {
@@ -496,8 +494,9 @@ void check_ultrasonic2 () {
   //Serial.print("2nd ultrasonic : ");
   //Serial.println(sonar2);
   if (sonar2 <= manual_dist && sonar2 > 0) {
-    digitalWrite(led17, HIGH);
-    close_flag = 3;
+    goto tz1;
+tz1:
+    TZ1();
   }
 }
 
@@ -581,7 +580,7 @@ void go_reverseTZ2() {
   attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
   steps = 0;
   while (1) {
-    //    read_sunfounder();
+    read_sunfounder();
     line_follow(reverse);
     //Serial.println("go straight");
     if (steps >= 1000) {
@@ -609,14 +608,8 @@ void check_reloadzoneTZ2() {
           close_flag = 0;
           break;
         }
-        else if (close_flag == 3)
-        {
-          close_flag = 0;
-          TZ2();
-          break;
-        }
         else {
-          check_ultrasonic2();              //if manual bot is there, go TZ2
+          check_ultrasonic2TZ2();              //if manual bot is there, go TZ2
         }
       }
       break;
@@ -632,7 +625,6 @@ void check_ultrasonic1TZ2() {
   if (sonar1 <= manual_dist && sonar1 > 1) {
     //Serial.println("lst detected");
     close_flag = 1;
-    digitalWrite(led16, HIGH);
   }
   else
   {
@@ -647,8 +639,9 @@ void check_ultrasonic2TZ2() {
   //Serial.println(sonar2);
   if (sonar2 <= manual_dist && sonar2 > 0) {
     //Serial.println("2nd detected");
-    digitalWrite(led17, HIGH);
-    close_flag = 3;
+    goto tz2;
+tz2:
+    TZ2();
   }
 }
 
@@ -716,7 +709,7 @@ void go_reverseTZ3() {
   attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
   steps = 0;
   while (1) {
-    //read_sunfounder();
+    read_sunfounder();
     line_follow(reverse);
     //Serial.println("go straight");
     if (steps >= 2000) {
@@ -727,11 +720,11 @@ void go_reverseTZ3() {
 }
 
 void check_reloadzoneTZ3() {
-  digitalWrite(led2, HIGH);
+  digitalWrite(led15, HIGH);
   while (1) {
     line_follow(reverse);
     if (sumvalue >= cross_value) {
-      digitalWrite(led2, LOW);
+      digitalWrite(led15, LOW);
       motorStop();
       delay(2000);
       break;
@@ -744,6 +737,7 @@ void motorLeft(float speed_pwm, int dir) {
 }
 
 void motorRight(float speed_pwm, int dir) {
+  digitalWrite(led6, HIGH);
   digitalWrite(dir1, dir);
   analogWrite(en1, speed_pwm);
 }
@@ -773,64 +767,131 @@ long pid(float lineDist)
 }
 
 void line_follow(int dir) {
-  read_sunfounder();
-  Serial.println("fuck2");
-  if (WA >= 1.5) {
-    speedl = normal_speed;
-    speedr = normal_speed - 10;
-    if (WA >= 2.5) {
-      speedl += 17.5;
-      if (WA >= 3.0) {
-        speedl += 10;
-        if (data[0]*offset[0] >= 70.0) {
-          speedl += 15;
-          speedr = 25;
-        }
-      }
+  //  read_sunfounder();
+  //  speedl = normal_speed;
+  ////  speedr = normal_speed;
+  //  //    if(Serial.available()){
+  //  digitalWrite(led1, HIGH);
+  //  input_data = Serial.read();
+  //  Serial.println(input_data);
+
+  //        digitalWrite(dir1, dir);
+  //         analogWrite(en1, heyyo);
+
+  //    }
+
+  if (Serial.available() > 0) {
+    input_data = Serial.read();
+    if (input_data != 10) {
+      Serial.println(input_data);
     }
-  } else if (WA <= 0.5) {
-    speedl = normal_speed - 10;
-    speedr = normal_speed;
-    if (WA <= -0.5) {
-      speedr += 17.5;
-      if (WA <= -1.0) {
-        speedr += 20;
-        if (data[14]*offset[7] >= 70.0) {
-          speedr += 15;
-          speedl = 25;
-        }
-      }
-    }
-  } else {
-    speedr = normal_speed;
-    speedl = normal_speed;
   }
-  motorLeft(speedl, dir);
-  motorRight(speedr, dir);
+  if (input_data >= 97 && input_data <107) {
+    dir1 = 0;
+    int speedr = map(input_data, 97, 106, 50, 255);
+  }else if(input_data > 107){
+    dir1 = 1;
+    int speedr = map(input_data, 108, 117, 50, 255);
+  }
+  motorRight(speedr, dir1);
+
+  ////  if(right4Most >= 70.0){
+  ////    speedr += 10;
+  ////    speedl -= 10;
+  ////  }
+  //  if(right3Most >= 70.0){
+  //    speedr += 10;
+  //    speedl -= 10;
+  //  }
+  //  if(right2Most >= 70.0){
+  //    speedr += 30;
+  //    speedl -= 30;
+  //  }
+  //  if(rightMost >= 70.0){
+  //    speedr += 50;
+  //    speedl -= 50;
+  //  }
+  ////
+  ////  if(left4Most >= 70.0){
+  ////    speedl += 10;
+  ////    speedr -= 10;
+  ////  }
+  //  if(left3Most >= 70.0){
+  //    speedl += 10;
+  //    speedr -= 10;
+  //  }
+  //  if(left2Most >= 70.0){
+  //    speedl += 30;
+  //    speedr -= 30;
+  //  }
+  //  if(leftMost >= 70.0){
+  //    speedl += 50;
+  //    speedr -= 50;
+  //  }
+
+
+
+
+
+
+
+
+  //  if (WA >= 1.5) {
+  //    speedl = normal_speed;
+  //    speedr = normal_speed - 10;
+  //    if (WA >= 2.5) {
+  //      speedl += 17.5;
+  //      if (WA >= 3.0) {
+  //        speedl += 10;
+  //        if (data[0]*offset[0] >= 70.0) {
+  //          speedl += 15;
+  //          speedr = 25;
+  //        }
+  //      }
+  //    }
+  //  } else if (WA <= 0.5) {
+  //    speedl = normal_speed - 10;
+  //    speedr = normal_speed;
+  //    if (WA <= -0.5) {
+  //      speedr += 17.5;
+  //      if (WA <= -1.0) {
+  //        speedr += 20;
+  //        if (data[14]*offset[7] >= 70.0) {
+  //          speedr += 15;
+  //          speedl = 25;
+  //        }
+  //      }
+  //    }
+  //  } else {
+  //    speedr = normal_speed;
+  //    speedl = normal_speed;
+  //  }
+  //  motorLeft(speedl, dir);
+  //  motorRight(speedr, dir);
 }
 
-
 float weightedAverage() {
-  //   Serial.println("bbbbb");
+  //Serial.println("bbbbb");
   read_sunfounder();
-
-  Serial.print("data[1]:");
-  Serial.println(data[0] * offset[0]);
-  Serial.print("data[2]:");
-  Serial.println(data[2] * offset[1]);
-  Serial.print("data[3]:");
-  Serial.println(data[4] * offset[2]);
-  Serial.print("data[4]:");
-  Serial.println(data[6] * offset[3]);
-  Serial.print("data[5]:");
-  Serial.println(data[8] * offset[4]);
-  Serial.print("data[6]:");
-  Serial.println(data[10] * offset[5]);
-  Serial.print("data[7]:");
-  Serial.println(data[12] * offset[6]);
-  Serial.print("data[8]:");
-  Serial.println(data[14] * offset[7]);
-  //delay(500);
+  /*
+    Serial.print("data[1]:");
+    Serial.println(data[0] * offset[0]);
+    Serial.print("data[2]:");
+    Serial.println(data[2] * offset[1]);
+    Serial.print("data[3]:");
+    Serial.println(data[4] * offset[2]);
+    Serial.print("data[4]:");
+    Serial.println(data[6] * offset[3]);
+    Serial.print("data[5]:");
+    Serial.println(data[8] * offset[4]);
+    Serial.print("data[6]:");
+    Serial.println(data[10] * offset[5]);
+    Serial.print("data[7]:");
+    Serial.println(data[12] * offset[6]);
+    Serial.print("data[8]:");
+    Serial.println(data[14] * offset[7]);
+    //delay(500);
+  */
   sumvalueweight = ((data[0] * (-42) * offset[0]) + (data[2] * (-30) * offset[1]) + (data[4] * (-18) * offset[2]) + (data[6] * (-6) * offset[3]) + (data[8] * 6 * offset[4]) + (data[10] * 18 * offset[5]) + (data[12] * 30 * offset[6]) + (data[14] * 42 * offset[7]));
   sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
   d = (sumvalueweight) / (sumvalue);
@@ -838,9 +899,9 @@ float weightedAverage() {
   leftMost = (data[0] * offset[1]);
   right3Most = (data[12] * offset[6]);
   right2Most = (data[10] * offset[5]);
-  //Serial.print("sumvalue ==   ");
+  // Serial.print("sumvalue ==   ");
   //Serial.println(sumvalue);
-  //delay(500);
+  // delay(500);
   return d ;
 }
 
@@ -859,11 +920,14 @@ void read_sunfounder() {
     sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
     //Serial.println(sumvalue);
     WA = (sumvalueweight) / (sumvalue);
-    Serial.println(WA);
     rightMost = (data[0] * offset[1]);
-    leftMost = (data[14] * offset[7]);
     right3Most = (data[4] * offset[2]);
     right2Most = (data[2] * offset[1]);
+    right4Most = (data[6] * offset[3]);
+    leftMost = (data[14] * offset[7]);
+    left4Most = (data[8] * offset[4]);
+    left3Most = (data[10] * offset[5]);
+    left2Most = (data[12] * offset[6]);
   }
 }
 
@@ -874,7 +938,6 @@ void cal() {
     steps = 0;
   }
 }
-
 
 
 

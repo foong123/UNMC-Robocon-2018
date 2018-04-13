@@ -8,14 +8,13 @@
 //scl -- orange jumper wire
 uchar t;
 uchar data[16];
-int offset = 10;
 float sumvalueweight;
 float sumvalue;
 float WA;
 float d;
 float leftmost;
 float rightmost;
-//float offset[8] = {1, 0.987, 0.97, 0.813, 0.734, 0.821, 0.78, 0.867};
+float offset[8] = {1, 0.987, 0.97, 0.813, 0.734, 0.821, 0.78, 0.867};
 
 //for pid
 float Kp = 30.0;
@@ -65,7 +64,7 @@ int en1 = 6; //yellow jumper wire
 int dir1 = 8; //green jumper wire
 int speedl = 0;
 int speedr = 0;
-int normal_speed = 50;
+int normal_speed = 40;
 double sonar1 = 0;
 double sonar2 = 0;
 volatile int steps = 0;
@@ -113,7 +112,6 @@ void setup() {
 void loop() {
 
   line_follow(forward);
- smallreverse();
   turnLeftcross();
   line_follow(forward);
 }
@@ -195,13 +193,10 @@ void check_ultrasonic2 () {
 void go_reverse() {
   steps = 0;
   while (1) {
-    
-    digitalWrite(dir1,reverse);
-    digitalWrite(dir2,reverse);
-    analogWrite(en1,50);
-    analogWrite(en2,50);
+
+    line_follow(reverse);
     Serial.println("go straight");
-    if (steps >= 30) {
+    if (steps >= 300) {
       Serial.println("Start check 2nd cross");
       break;
     }
@@ -277,7 +272,7 @@ void go_straight() {
 }
 void line_follow(int dir) {
   //dir2 is right, 1 is backward
- 
+
   while (1) {
     WA_direction = digitalRead(leftright);
     multiply1 = digitalRead(power1);
@@ -286,7 +281,8 @@ void line_follow(int dir) {
     junction_flag = digitalRead(junction);
     if (junction_flag) {
       motorStop();
-      return;
+      go_straight();
+      break;
     }
     if (dir == reverse) {
       if (close_flag == 0) {
@@ -297,47 +293,49 @@ void line_follow(int dir) {
     }
     if (WA_direction == HIGH) { //go right
       if (multiply1 == HIGH) {
-        
-       
-        rightspeed = 50 + offset;
+
+
+        rightspeed = 50;
         leftspeed = normal_speed;
       }
       if (multiply2 == HIGH) {
-        
-        rightspeed = 60 + offset;
-        leftspeed = normal_speed ;
+
+        rightspeed = 60;
+        leftspeed = normal_speed;
       }
       if (multiply3 == HIGH) {
-       
-        rightspeed = 70 + offset;
-        leftspeed = normal_speed ;
-      }else{
-          rightspeed = normal_speed;
+
+        rightspeed = 70;
         leftspeed = normal_speed;
-        }
+      }
+      if (multiply1 == LOW && multiply2 == LOW && multiply3 == LOW) {
+        rightspeed = normal_speed;
+        leftspeed = normal_speed;
+      }
     }
 
     if (WA_direction == LOW) { //go left
       if (multiply1 == HIGH) {
-        
-        leftspeed = 50 ;
-        rightspeed = normal_speed ;
+
+        leftspeed = 50;
+        rightspeed = normal_speed;
       }
       if (multiply2 == HIGH) {
-       
-        
-        leftspeed = 60 + offset; 
-        rightspeed = normal_speed ;
+
+
+        leftspeed = 60;
+        rightspeed = normal_speed;
       }
       if (multiply3 == HIGH) {
         //digitalWrite(led15, LOW);
-       
-        leftspeed = 70 + offset ;
-        rightspeed = normal_speed ;
-      }else{
-          rightspeed = normal_speed;
+
+        leftspeed = 70;
+        rightspeed = normal_speed;
+      }
+      if (multiply1 == LOW && multiply2 == LOW && multiply3 == LOW) {
+        rightspeed = normal_speed;
         leftspeed = normal_speed;
-        }
+      }
     }
     digitalWrite(dir1, dir);
     digitalWrite(dir2, dir);
@@ -412,7 +410,6 @@ void checkcross() {
 }
 
 void smallreverse() {
-  steps = 0;
   attachInterrupt(digitalPinToInterrupt(encoder1), cal, CHANGE);
   while (1) {
     digitalWrite(dir2, HIGH);
