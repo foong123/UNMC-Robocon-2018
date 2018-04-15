@@ -62,7 +62,7 @@ int right_IR = 0;
 // Ultrasonic_Pin
 int trig1 = 13; //blue jumper wire (front)
 int echo1 = 12; //green jumper wire(front)
-int trig2 = 49; //yellow jumper wire(back)
+int trig++2 = 49; //yellow jumper wire(back)
 int echo2 = 48; //red jumper wire(back)
 
 //Ultrasonic_Variables
@@ -84,32 +84,17 @@ long output;
 
 // I2C
 int led1 = 53 ;       // green jumper wire // i2c  // Orange LED
+//Position pinout
+int TZ1_pin = 38;
+int TZ2_pin = 41;
+int TZ3_pin = 40;
+int reload_pin = 37;
+int receive_pin = 36;
+//Indication led
+int reload_led = 22;
+int launch_led = 24;
+int detect_led = 26;
 
-//StartZone
-int led2 = 28;      // Startzone  // Red LED
-int led3 = 30;      // Turn90     // Red LED
-
-//TZ1
-
-int led4 = 32;      // TZ1 Left Cross   // Green LED
-int led5 = 34;      // Allignment TZ1   // Green LED
-int led6 = 36;      // Reverse TZ1 // Green LED
-int led7 = 38;      // Check Manual bot // Green LED
-
-//TZ2
-int led8 = 39;      // Turn Right Cross // Blue LED
-int led9 = 41;      // TZ2 Left Cross // Blue LED
-int led10 = 43;      // Allignment TZ2 // Blue LED
-int led11 = 45;      // Reverse TZ2 // Blue LED
-int led12 = 47;     // Check Manual Bot // Blue LED
-
-// TZ3
-int led13 = 49;      // TZ3 go forward + allignment // RED LED
-int led14 = 51;      // TZ3 reverse // RED LED
-
-//Ultrasonic
-int led16 = 42;      //   WHITE LED
-int led17 = 44;      // WHITE LED
 
 //Flags
 int ignore_flag = 0;
@@ -137,22 +122,12 @@ void setup() {
   pinMode(en1, OUTPUT);
   pinMode(dir2, OUTPUT);
   pinMode(dir1, OUTPUT);
+  pinMode(TZ1_pin,OUTPUT);
+  pinMode(TZ2_pin,OUTPUT);
+  pinMode(TZ3_pin,OUTPUT);
+  pinMode(reload_pin,OUTPUT);
+  pinMode(receieved_pin,INPUT);
   pinMode(led1, OUTPUT);
-  pinMode(led2, OUTPUT);
-  pinMode(led3, OUTPUT);
-  pinMode(led4, OUTPUT);
-  pinMode(led5, OUTPUT);
-  pinMode(led6, OUTPUT);
-  pinMode(led7, OUTPUT);
-  pinMode(led8, OUTPUT);
-  pinMode(led9, OUTPUT);
-  pinMode(led10, OUTPUT);
-  pinMode(led11, OUTPUT);
-  pinMode(led12, OUTPUT);
-  pinMode(led13, OUTPUT);
-  pinMode(led14, OUTPUT);
-  pinMode(led16, OUTPUT);
-  pinMode(led17, OUTPUT);
 }
 
 void loop() {
@@ -162,7 +137,13 @@ void loop() {
   } else {
     digitalWrite(led1, LOW);
   }
-  
+  delay(50);
+  Serial.print(ultrasonic1.ping_cm());
+  delay(50);
+  Serial.print("    ");
+  Serial.println(ultrasonic2.ping_cm());
+//  delay(50);
+ // Serial.println(ultrasonic2.ping_cm());
   //StartZone
   //startzone();
 
@@ -176,7 +157,7 @@ void loop() {
 
   //TZ3
   //TZ3();
-  line_follow_reverse();
+ // line_follow_reverse();
   //read_sunfounder();
   //Serial.println(WA);
   //Serial.println("asdad");
