@@ -30,8 +30,8 @@ int en1 = 6; //yellow jumper wire
 int dir1 = 8; //green jumper wire
 
 //Motor_Pin
-int encoder1 = 2; //yellow jumper wire
-int encoder2 = 3;
+int encoder1 = 3; //yellow jumper wire
+//int encoder2 = 3;
 
 //Motor_Variables
 int leftMotorBaseSpeed = 70;
@@ -159,9 +159,9 @@ void loop() {
   //TZ3();
 
   //go back to TZ2 after throwing 5 golden balls
-  
+
   //line_follow_reverse();
-  //read_sunfounder();
+  read_sunfounder();
   //Serial.println(WA);
   //Serial.println(sumvalue);
   //go_launchzone();               //Allignment of launching zone
@@ -232,11 +232,11 @@ void TZ2()
 void TZ3()
 {
   int throw_count = 0;
-  for (throw_count = 0; throw_count >5; throw_count++) {
+  for (throw_count = 0; throw_count > 5; throw_count++) {
     digitalWrite(reload_pin, HIGH);
     delay(3000);
     while (1) {
-      digitalWrite(reload_pin,LOW);
+      digitalWrite(reload_pin, LOW);
       int receive = digitalRead(receive_pin);
       //if (receive == 1) {
       //break;
@@ -248,7 +248,7 @@ void TZ3()
     go_reverseTZ3();
     check_reloadzoneTZ3();
   }
-  while(1);
+  while (1);
 }
 
 void turnRight90() {
@@ -439,11 +439,11 @@ void go_launchzone() {
           launch_flag = 1;
 
           digitalWrite(reload_pin, HIGH);
-          digitalWrite(TZ1_pin,HIGH);
+          digitalWrite(TZ1_pin, HIGH);
           while (1) {
             delay(5000);
             digitalWrite(reload_pin, LOW);
-            digitalWrite(TZ1_pin,LOW);
+            digitalWrite(TZ1_pin, LOW);
             int receive = digitalRead(receive_pin);
             //if (receive == 1) {
             // break;
@@ -467,11 +467,11 @@ void go_launchzone() {
           analogWrite(en1, 0);
           launch_flag = 1;
           digitalWrite(reload_pin, HIGH);
-          digitalWrite(TZ1_pin,HIGH);
+          digitalWrite(TZ1_pin, HIGH);
           while (1) {
             delay(5000);
-            digitalWrite(reload_pin,LOW);
-            digitalWrite(TZ1_pin,LOW);
+            digitalWrite(reload_pin, LOW);
+            digitalWrite(TZ1_pin, LOW);
             int receive = digitalRead(receive_pin);
             //if (receive == 1) {
             //break;
@@ -617,11 +617,11 @@ void check_launchzoneTZ2() {
           analogWrite(en2, 0);
           launch_flag = 1;
           digitalWrite(reload_pin, HIGH);
-          digitalWrite(TZ2_pin,HIGH);
+          digitalWrite(TZ2_pin, HIGH);
           while (1) {
             delay(5000);
-            digitalWrite(reload_pin,LOW);
-            digitalWrite(TZ2_pin,LOW);
+            digitalWrite(reload_pin, LOW);
+            digitalWrite(TZ2_pin, LOW);
             int receive = digitalRead(receive_pin);
             //if (receive == 1) {
             // break;
@@ -645,11 +645,11 @@ void check_launchzoneTZ2() {
           analogWrite(en1, 0);
           launch_flag = 1;
           digitalWrite(reload_pin, HIGH);
-          digitalWrite(TZ2_pin,HIGH);
+          digitalWrite(TZ2_pin, HIGH);
           while (1) {
             delay(5000);
-            digitalWrite(reload_pin,LOW);
-            digitalWrite(TZ2_pin,LOW);
+            digitalWrite(reload_pin, LOW);
+            digitalWrite(TZ2_pin, LOW);
             int receive = digitalRead(receive_pin);
             //if (receive == 1) {
             // break;
@@ -769,11 +769,11 @@ void check_launchzoneTZ3() {
           analogWrite(en2, 0);
           launch_flag = 1;
           digitalWrite(reload_pin, HIGH);
-          digitalWrite(TZ3_pin,HIGH);
+          digitalWrite(TZ3_pin, HIGH);
           while (1) {
             delay(5000);
             digitalWrite(reload_pin, LOW);
-            digitalWrite(TZ3_pin,LOW);
+            digitalWrite(TZ3_pin, LOW);
             int receive = digitalRead(receive_pin);
             //if (receive == 1) {
             // break;
@@ -797,11 +797,11 @@ void check_launchzoneTZ3() {
           analogWrite(en1, 0);
           launch_flag = 1;
           digitalWrite(reload_pin, HIGH);
-          digitalWrite(TZ3_pin,HIGH);
+          digitalWrite(TZ3_pin, HIGH);
           while (1) {
             delay(5000);
             digitalWrite(reload_pin, LOW);
-            digitalWrite(TZ3_pin,LOW);
+            digitalWrite(TZ3_pin, LOW);
             int receive = digitalRead(receive_pin);
             //if (receive == 1) {
             // break;
@@ -918,12 +918,12 @@ void line_follow_launch(int dir) {
   read_sunfounder();
   speedl = (normal_speed * multipier_launch);
   speedr = (normal_speed * multipier_launch);
-  if (WA <= -0.6) {
+  if (WA >= 0.4) {
     speedl = (normal_speed * multipier_launch);
     speedr = (normal_speed * multipier_launch) - (10 * multipier_launch);
-    if (WA <= -1.58) {
+    if (WA >= 2.4) {
       speedl += (17.5 * multipier_launch);
-      if (WA <= -2.8) {
+      if (WA >= 3.81) {
         speedl += (10 * multipier_launch);
         if (data[0]*offset[0] >= 70.0) {
           speedl += (15 * multipier_launch);
@@ -931,12 +931,12 @@ void line_follow_launch(int dir) {
         }
       }
     }
-  } else if (WA >= 0.4) {
+  } else if (WA <= -0.6) {
     speedl = (normal_speed * multipier_launch) - (10 * multipier_launch);
     speedr = (normal_speed * multipier_launch);
-    if (WA >= 2.4) {
+    if (WA <= -1.58) {
       speedr += (17.5 * multipier_launch);
-      if (WA >= 3.81) {
+      if (WA <= -2.8) {
         speedr += (20 * multipier_launch);
         if (data[14]*offset[7] >= 70.0) {
           speedr += (15 * multipier_launch);
@@ -956,12 +956,12 @@ void line_follow_reverse() {
   speedl = (normal_speed * multipier_slow);
   speedr = (normal_speed * multipier_slow);
   read_sunfounder();
-  if (WA >= -0.6) {
+  if (WA >= 0.4) {
     speedl = (normal_speed * multipier_slow);
     speedr = (normal_speed * multipier_slow) - (10 * multipier_slow);
-    if (WA >= -1.58) {
+    if (WA >= 2.4) {
       speedl += (17.5 * multipier_slow);
-      if (WA >= -2.8) {
+      if (WA >= 3.81) {
         speedl += (20 * multipier_slow);
         if (data[0]*offset[0] >= 70.0) {
           speedl += (15 * multipier_slow);
@@ -969,12 +969,12 @@ void line_follow_reverse() {
         }
       }
     }
-  } else if (WA <= 0.4) {
+  } else if (WA <= -0.6) {
     speedl = (normal_speed * multipier_slow) - (10 * multipier_slow);
     speedr = (normal_speed * multipier_slow);
-    if (WA <= 2.4) {
+    if (WA <=-1.58) {
       speedr += (17.5 * multipier_slow);
-      if (WA <= 3.81) {
+      if (WA <= -2.8) {
         speedr += (20 * multipier_slow);
         if (data[14]*offset[7] >= 70.0) {
           speedr += (15 * multipier_slow);
@@ -1040,11 +1040,16 @@ void read_sunfounder() {
     sumvalue = ((data[0] * offset[0]) + (data[2] * offset[1]) + (data[4] * offset[2]) + (data[6] * offset[3]) + (data[8] * offset[4]) + (data[10] * offset[5]) + (data[12] * offset[6]) + (data[14] * offset[7]));
     //Serial.println(sumvalue);
     WA = (sumvalueweight) / (sumvalue);
-    //Serial.println(WA);
     rightMost = (data[0] * offset[1]);
     leftMost = (data[14] * offset[7]);
     right3Most = (data[4] * offset[2]);
     right2Most = (data[2] * offset[1]);
+    Serial.println("WA:");
+    Serial.print(WA);
+    Serial.print(" sumValue");
+    Serial.println(sumvalue);
+    Serial.println(" rightMost:");
+    Serial.println(rightMost);
   }
 }
 
