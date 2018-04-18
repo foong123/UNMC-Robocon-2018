@@ -19,8 +19,8 @@ float rightMost;
 float leftMost;
 float right2Most;
 float right3Most;
-float offset[8] = {1, 0.95, 0.99, 0.83, 0.71, 0.8, 0.74, 0.78};
-int cross_value = 650;
+float offset[8] = {1.00, 0.92, 0.94, 0.83, 0.79, 0.92, 0.97, 1.21};
+int cross_value = 560;
 int value90 = 360;
 
 //Motor_driver_Pin
@@ -145,10 +145,10 @@ void loop() {
   //delay(50);
   //Serial.println(ultrasonic2.ping_cm());
   //StartZone
-  startzone();
+  //startzone();
 
   // TZ1
- //goTZ1();
+  //goTZ1();
   //TZ1();
 
   //TZ2
@@ -161,7 +161,7 @@ void loop() {
   //go back to TZ2 after throwing 5 golden balls
 
   //line_follow_reverse();
-  read_sunfounder();
+  //read_sunfounder();
   //Serial.println(WA);
   //Serial.println(sumvalue);
   //go_launchzone();               //Allignment of launching zone
@@ -169,7 +169,7 @@ void loop() {
   //Serial.println("In the loop");
   //check_reloadzone();
   //check_ADS();
-  //line_follow(forward);
+  line_follow(forward);
 
 }
 
@@ -253,7 +253,7 @@ void TZ3()
 
 void turnRight90() {
   while (1) {
-    line_follow_(forward);                 //Line follow in forward direction
+    line_follow(forward);                 //Line follow in forward direction
     //debug line
     //Serial.println(sumvalue);
     //Serial.print(rightMost);
@@ -265,6 +265,7 @@ void turnRight90() {
     //Check condition
     if (sumvalue > cross_value) {
       //debug line
+      // CHECK THIS CROSS_VALUE
       //Serial.print("I see a right turn");
       smallreverse();         //Re-adjust the robot for perfect turning
       turnRightcross();       //Turn right by 90
@@ -275,7 +276,7 @@ void turnRight90() {
 
 void turnRight90_slow() {
   while (1) {
-    line_follow_(forward);                 //Line follow in forward direction
+    line_follow(forward);                 //Line follow in forward direction
     //debug line
     //Serial.println(sumvalue);
     //Serial.print(rightMost);
@@ -287,6 +288,7 @@ void turnRight90_slow() {
     //Check condition
     if (sumvalue > cross_value) {
       //debug line
+      // CHECK THIS CROSS_VALUE
       //Serial.print("I see a right turn");
       smallreverse();         //Re-adjust the robot for perfect turning
       turnRightcross();       //Turn right by 90
@@ -339,7 +341,7 @@ void Turn90() {
 void go_straight() {
   steps = 0;
   while (1) {
-    line_follow_(forward);
+    line_follow(forward);
     //Serial.println("go straight");
     if (steps >= 100) {
       //Serial.println("Start check 2nd cross");
@@ -353,7 +355,7 @@ void go_straight() {
 
 void turnLeft90() {
   while (1) {
-    line_follow_(forward);
+    line_follow(forward);
     //Serial.println(sumvalue);
     if (sumvalue >= cross_value ) {
       steps = 0;
@@ -409,7 +411,7 @@ void TurnCross() {
 void go_straightTZ1() {
   steps = 0;
   while (1) {
-    line_follow_(forward);
+    line_follow(forward);
     //Serial.println("go straight");
     if (steps >= 150) {
       //Serial.println("Start check 2nd cross");
@@ -588,7 +590,7 @@ void turnRightcrossTZ2() {
 
 void turnLeft90TZ2() {
   while (1) {
-    line_follow_(forward);
+    line_follow(forward);
     //Serial.println(sumvalue);
     if (sumvalue >= cross_value ) {
       steps = 0;
@@ -601,7 +603,7 @@ void turnLeft90TZ2() {
 
 void check_launchzoneTZ2() {
   while (1) {
-    line_follow_(forward);
+    line_follow(forward);
     read_IR();
     //Serial.println(left_IR);
     //Serial.println(right_IR);
@@ -669,7 +671,7 @@ void go_reverseTZ2() {
   steps = 0;
   while (1) {
     //    read_sunfounder();
-    line_follow_(reverse);
+    line_follow(reverse);
     //Serial.println("go straight");
     if (steps >= 1000) {
       break;
@@ -876,16 +878,16 @@ long pid(float lineDist)
 }
 
 ////////////////// LINE FOLLOW FUNCTION //////////////////////////////////
-void line_follow_(int dir) {
+void line_follow(int dir) {
   read_sunfounder();
   speedl = (normal_speed * multipier);
   speedr = (normal_speed * multipier);
-  if (WA >= 1.0) {
+  if (WA >= 6.06) {                       // Center
     speedl = (normal_speed * multipier);
     speedr = (normal_speed * multipier) - (10 * multipier);
-    if (WA >= 0.6) {
-      speedl += (17.5 * multipier);
-      if (WA >= -0.10) {
+    if (WA >= 8.41) {                      // two bits of from the center  ( left of center)
+      speedl += (17.5 * multipier); 
+      if (WA >= 10.44) {                  // Last two bits  (leftmost)
         speedl += (10 * multipier);
         if (data[0]*offset[0] >= 70.0) {
           speedl += (15 * multipier);
@@ -893,12 +895,12 @@ void line_follow_(int dir) {
         }
       }
     }
-  } else if (WA <= 2.0) {
+  } else if (WA <= 5.06) {                 // center 
     speedl = (normal_speed * multipier) - (10 * multipier);
     speedr = (normal_speed * multipier);
-    if (WA <= 3.4) {
+    if (WA <= 4.46) {                    // two bits from the center ( right of center)
       speedr += (17.5 * multipier);
-      if (WA <= 4.7) {
+      if (WA <= 2.87) {                // last two bits (rightmost)
         speedr += (20 * multipier);
         if (data[14]*offset[7] >= 70.0) {
           speedr += (15 * multipier);
@@ -918,12 +920,12 @@ void line_follow_launch(int dir) {
   read_sunfounder();
   speedl = (normal_speed * multipier_launch);
   speedr = (normal_speed * multipier_launch);
-  if (WA >= 0.4) {
+  if (WA >= -0.1) {
     speedl = (normal_speed * multipier_launch);
     speedr = (normal_speed * multipier_launch) - (10 * multipier_launch);
-    if (WA >= 2.4) {
+    if (WA >= 0.6) {
       speedl += (17.5 * multipier_launch);
-      if (WA >= 3.81) {
+      if (WA >= 1.0) {
         speedl += (10 * multipier_launch);
         if (data[0]*offset[0] >= 70.0) {
           speedl += (15 * multipier_launch);
@@ -931,12 +933,12 @@ void line_follow_launch(int dir) {
         }
       }
     }
-  } else if (WA <= -0.6) {
+  } else if (WA <= 2.0) {
     speedl = (normal_speed * multipier_launch) - (10 * multipier_launch);
     speedr = (normal_speed * multipier_launch);
-    if (WA <= -1.58) {
+    if (WA <= 3.4) {
       speedr += (17.5 * multipier_launch);
-      if (WA <= -2.8) {
+      if (WA <= 4.7) {
         speedr += (20 * multipier_launch);
         if (data[14]*offset[7] >= 70.0) {
           speedr += (15 * multipier_launch);
@@ -956,12 +958,12 @@ void line_follow_reverse() {
   speedl = (normal_speed * multipier_slow);
   speedr = (normal_speed * multipier_slow);
   read_sunfounder();
-  if (WA >= 0.4) {
+  if (WA >= -0.1) {
     speedl = (normal_speed * multipier_slow);
     speedr = (normal_speed * multipier_slow) - (10 * multipier_slow);
-    if (WA >= 2.4) {
+    if (WA >= 0.6) {
       speedl += (17.5 * multipier_slow);
-      if (WA >= 3.81) {
+      if (WA >= 1.0) {
         speedl += (20 * multipier_slow);
         if (data[0]*offset[0] >= 70.0) {
           speedl += (15 * multipier_slow);
@@ -969,12 +971,12 @@ void line_follow_reverse() {
         }
       }
     }
-  } else if (WA <= -0.6) {
+  } else if (WA <= 2.0) {
     speedl = (normal_speed * multipier_slow) - (10 * multipier_slow);
     speedr = (normal_speed * multipier_slow);
-    if (WA <=-1.58) {
+    if (WA <= 3.4) {
       speedr += (17.5 * multipier_slow);
-      if (WA <= -2.8) {
+      if (WA <= 4.7) {
         speedr += (20 * multipier_slow);
         if (data[14]*offset[7] >= 70.0) {
           speedr += (15 * multipier_slow);
@@ -1044,12 +1046,15 @@ void read_sunfounder() {
     leftMost = (data[14] * offset[7]);
     right3Most = (data[4] * offset[2]);
     right2Most = (data[2] * offset[1]);
-    Serial.println("WA:");
-    Serial.print(WA);
-    Serial.print(" sumValue");
-    Serial.println(sumvalue);
-    Serial.println(" rightMost:");
-    Serial.println(rightMost);
+//    Serial.println("WA:");
+//    Serial.print(WA);
+//    delay(500);
+//    Serial.println("sumValue:");
+//    Serial.println(sumvalue);
+//    delay(500);
+//    Serial.print("rightMost:");
+//    Serial.println(rightMost);
+//    delay(500);
   }
 }
 
